@@ -110,7 +110,7 @@ const Landing = () => {
               {/* CTA Buttons */}
               <div className="animate-entrance opacity-0 translate-y-10 transition-all duration-700 delay-300 flex flex-wrap gap-4 mt-8">
                 <button
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/register')}
                   className="px-8 py-4 bg-amber-700 text-white rounded-xl hover:bg-amber-800 cursor-pointer transition-all duration-300 font-medium shadow-lg shadow-amber-200 flex items-center justify-center group"
                 >
                   Get started
