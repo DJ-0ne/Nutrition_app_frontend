@@ -26,7 +26,7 @@ const userSidebarData = [
         link: "/user/DietLog"
     },
     {
-        title: "90-Day Diary",
+        title: "30-Day Diary",
         icon: <MenuBookIcon />,
         link: "/user/DiaryHistory"
     },

@@ -1,4 +1,4 @@
-// components/ProtectedRoute.jsx
+// components/Authentication/ProtectedRoute.jsx
 import { Navigate } from 'react-router-dom';
 import { useAuthContext } from './AuthContext';
 
@@ -17,10 +17,28 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/Login" replace />;
   }
 
-  // Check if user has required role
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/Register" replace />;
+  // ==================== ADMIN CHECK (supports your exact backend) ====================
+  if (allowedRoles.length > 0) {
+    const isAdminRoute = allowedRoles.includes('system_admin');
+
+    let hasAccess = false;
+
+    if (isAdminRoute) {
+      // This matches exactly what your Login.jsx and AuthContext already do
+      hasAccess =
+        user.is_staff === true ||
+        user.is_superuser === true ||
+        user.role === 'system_admin';
+    } else {
+      // Normal role check (e.g. user_client)
+      hasAccess = allowedRoles.includes(user.role);
+    }
+
+    if (!hasAccess) {
+      return <Navigate to="/user/Home" replace />;   // or "/unauthorized" or keep "/Register"
+    }
   }
+  // =================================================================================
 
   return children;
 };

@@ -111,7 +111,7 @@ const Landing = () => {
               <div className="animate-entrance opacity-0 translate-y-10 transition-all duration-700 delay-300 flex flex-wrap gap-4 mt-8">
                 <button
                   onClick={() => navigate('/login')}
-                  className="px-8 py-4 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition-all duration-300 font-medium shadow-lg shadow-amber-200 flex items-center justify-center group"
+                  className="px-8 py-4 bg-amber-700 text-white rounded-xl hover:bg-amber-800 cursor-pointer transition-all duration-300 font-medium shadow-lg shadow-amber-200 flex items-center justify-center group"
                 >
                   Get started
                   <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,9 +120,9 @@ const Landing = () => {
                 </button>
                 <button
                   onClick={() => navigate('/about')}
-                  className="px-8 py-4 bg-transparent text-teal-600 border-2 border-teal-600 rounded-xl hover:bg-teal-50 transition-all duration-300 font-medium"
+                  className="px-8 py-4 bg-transparent text-teal-600 border-2 cursor-pointer border-teal-600 rounded-xl hover:bg-teal-50 transition-all duration-300 font-medium"
                 >
-                  Learn More
+                  Log in
                 </button>
               </div>
 

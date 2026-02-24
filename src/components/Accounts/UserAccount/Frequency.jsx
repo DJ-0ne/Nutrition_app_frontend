@@ -1,76 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-
-// Mock data
-const ffqData = [
-  {
-    id: "vegetables",
-    title: "Vegetables",
-    items: [
-      { id: "veg_1", name: "Sukuma Wiki (Collard Greens) - 1 cup cooked" },
-      { id: "veg_2", name: "Cabbage - 1 cup shredded" },
-      { id: "veg_3", name: "Spinach - 1 cup cooked" },
-      { id: "veg_4", name: "Carrots - 1 medium or ½ cup" },
-      { id: "veg_5", name: "Tomatoes - 1 medium or ½ cup" },
-      { id: "veg_6", name: "Onions - 1 medium or ½ cup chopped" },
-      { id: "veg_7", name: "Kale - 1 cup chopped" },
-      { id: "veg_8", name: "Green Peppers - 1 medium" },
-    ]
-  },
-  {
-    id: "fruits",
-    title: "Fruits",
-    items: [
-      { id: "fruit_1", name: "Banana - 1 medium" },
-      { id: "fruit_2", name: "Mango - 1 medium" },
-      { id: "fruit_3", name: "Orange - 1 medium" },
-      { id: "fruit_4", name: "Pineapple - 1 cup chunks" },
-      { id: "fruit_5", name: "Watermelon - 1 cup cubes" },
-      { id: "fruit_6", name: "Avocado - ½ medium" },
-      { id: "fruit_7", name: "Passion Fruit - 3-4 fruits" },
-      { id: "fruit_8", name: "Papaya - 1 cup cubes" },
-    ]
-  },
-  {
-    id: "grains_starches",
-    title: "Grains and Starches",
-    items: [
-      { id: "grain_1", name: "Ugali - 1 medium slice (about 150g)" },
-      { id: "grain_2", name: "Githeri (Maize & Beans) - 1 cup" },
-      { id: "grain_3", name: "Rice (white) - 1 cup cooked" },
-      { id: "grain_4", name: "Chapati - 1 medium" },
-      { id: "grain_5", name: "Irish Potatoes - 1 medium" },
-      { id: "grain_6", name: "Sweet Potatoes - 1 medium" },
-      { id: "grain_7", name: "Spaghetti/Pasta - 1 cup cooked" },
-      { id: "grain_8", name: "Bread - 2 slices" },
-    ]
-  },
-  {
-    id: "proteins",
-    title: "Protein Foods",
-    items: [
-      { id: "protein_1", name: "Nyama Choma (Grilled Meat) - 1 piece (150g)" },
-      { id: "protein_2", name: "Beef Stew - 1 cup" },
-      { id: "protein_3", name: "Chicken - 1 piece (drumstick/thigh)" },
-      { id: "protein_4", name: "Fish (Tilapia/Omena) - 1 medium fish" },
-      { id: "protein_5", name: "Beans - 1 cup cooked" },
-      { id: "protein_6", name: "Lentils - 1 cup cooked" },
-      { id: "protein_7", name: "Green Grams - 1 cup cooked" },
-      { id: "protein_8", name: "Eggs - 1 egg" },
-    ]
-  },
-  {
-    id: "dairy",
-    title: "Dairy Products",
-    items: [
-      { id: "dairy_1", name: "Fresh Milk - 1 glass (250ml)" },
-      { id: "dairy_2", name: "Mursik (Fermented Milk) - 1 cup" },
-      { id: "dairy_3", name: "Yogurt - 1 cup" },
-      { id: "dairy_4", name: "Cheese - 1 slice (30g)" },
-    ]
-  }
-];
+import { useAuth } from "../../../auth/useAuth";
+import { ffqData } from '@/constants/ffqData';
+import { SubscriptionTier } from '../../../constants/subscriptionTier';
 
 const FREQUENCY_OPTIONS = [
   { value: "never", label: "Never" },
@@ -83,23 +15,41 @@ const FREQUENCY_OPTIONS = [
   { value: "4+_per_day", label: "4+ per day" },
 ];
 
-// Mock auth hook
-const useAuth = () => ({
-  apiBaseURL: 'http://localhost:8000'
-});
-
 const Frequency = () => {
-  const { apiBaseURL } = useAuth();
+  const { token, apiBaseURL } = useAuth();
+
+  // ✅ Local tier state (fetched from server + fallback)
+  const [currentTier, setCurrentTier] = useState(SubscriptionTier.FREE);
+
   const [responses, setResponses] = useState({});
   const [cachedInsights, setCachedInsights] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
   const [loadingResponses, setLoadingResponses] = useState(true);
   const [loadingInsights, setLoadingInsights] = useState(false);
 
-  // Load responses and cached insights on mount
+  // Fetch real user tier from profile (same as Dashboard/MealPlan/Recall)
+  useEffect(() => {
+    const fetchTier = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch(`${apiBaseURL}/api/profile/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const tier = data.tier || data.subscription_tier || data.subscriptionTier;
+          if (tier) setCurrentTier(tier);
+        }
+      } catch (err) {
+        console.warn("Could not fetch user tier");
+      }
+    };
+    fetchTier();
+  }, [token, apiBaseURL]);
+
+  // Load responses and cached insights
   useEffect(() => {
     const loadData = async () => {
-      const token = localStorage.getItem("token");
       if (!token) {
         setLoadingResponses(false);
         return;
@@ -108,7 +58,7 @@ const Frequency = () => {
       try {
         // Load responses
         const responsesRes = await fetch(`${apiBaseURL}/api/ffq-responses/`, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (responsesRes.ok) {
@@ -122,7 +72,7 @@ const Frequency = () => {
 
         // Load cached insights
         const insightsRes = await fetch(`${apiBaseURL}/api/ffq-insights/`, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (insightsRes.ok) {
           const data = await insightsRes.json();
@@ -139,12 +89,17 @@ const Frequency = () => {
     };
 
     loadData();
-  }, [apiBaseURL]);
+  }, [apiBaseURL, token]);
 
   const generateAndSaveInsights = async () => {
-    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Authentication required");
+      return;
+    }
+
+    // FREE users cannot generate insights
+    if (currentTier === SubscriptionTier.FREE) {
+      toast.error("Upgrade to Pro Lite or Premium to generate AI insights");
       return;
     }
 
@@ -152,7 +107,7 @@ const Frequency = () => {
     try {
       const res = await fetch(`${apiBaseURL}/api/generate-ffq-insights/`, {
         method: "POST",
-        headers: { Authorization: `Token ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
@@ -179,7 +134,6 @@ const Frequency = () => {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Authentication required");
       return;
@@ -195,7 +149,7 @@ const Frequency = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Token ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ responses }),
       });
@@ -220,14 +174,13 @@ const Frequency = () => {
   const answeredItems = Object.keys(responses).length;
   const progress = Math.round((answeredItems / totalItems) * 100);
 
-  // Helper to render insights with formatting
+  // Helper to render insights
   const renderInsights = (text) => {
     const lines = text.split('\n').filter(line => line.trim() !== '');
     
     return lines.map((line, index) => {
       const trimmed = line.trim();
       
-      // Title (starts with #)
       if (trimmed.startsWith('#')) {
         return (
           <h5 key={index} className="text-xl font-black text-amber-800 mb-4 mt-3 first:mt-0 border-b border-amber-200 pb-2">
@@ -236,7 +189,6 @@ const Frequency = () => {
         );
       }
       
-      // Bullet point (starts with -)
       if (trimmed.startsWith('-')) {
         return (
           <div key={index} className="flex items-start gap-3 mb-3">
@@ -248,7 +200,6 @@ const Frequency = () => {
         );
       }
       
-      // Regular paragraph
       return (
         <p key={index} className="text-slate-700 text-base font-medium leading-relaxed mb-4 last:mb-0">
           {trimmed}
@@ -269,7 +220,7 @@ const Frequency = () => {
     <div className="w-full min-h-screen bg-white">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
         <div className="w-full space-y-6 sm:space-y-8">
-          {/* Header Section - Crystal clear */}
+          {/* Header Section */}
           <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-lg border border-amber-200">
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
               <div className="space-y-3">
@@ -285,7 +236,7 @@ const Frequency = () => {
                 </p>
               </div>
 
-              {/* Progress Card - Highly visible */}
+              {/* Progress Card */}
               <div className="w-full xl:w-96 bg-amber-50 rounded-xl p-5 border-2 border-amber-200">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-sm font-bold text-amber-800 uppercase tracking-wider">Progress</span>
@@ -312,7 +263,6 @@ const Frequency = () => {
                 key={section.id}
                 className="w-full bg-white rounded-2xl sm:rounded-3xl shadow-lg border border-amber-200 overflow-hidden"
               >
-                {/* Section Header */}
                 <div className="bg-amber-50 border-b border-amber-200 px-6 py-4">
                   <h2 className="text-xl sm:text-2xl font-bold text-amber-800">
                     {section.title}
@@ -322,7 +272,6 @@ const Frequency = () => {
                   </p>
                 </div>
 
-                {/* Table Container */}
                 <div className="w-full overflow-x-auto">
                   <table className="w-full min-w-[1000px]">
                     <thead>
@@ -390,7 +339,7 @@ const Frequency = () => {
             ))}
           </div>
 
-          {/* Action Bar - Sticky and prominent */}
+          {/* Action Bar */}
           <div className="sticky bottom-4 z-40 bg-white shadow-2xl rounded-xl border-2 border-amber-200 p-4">
             <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button
@@ -402,23 +351,25 @@ const Frequency = () => {
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white
                   flex items-center justify-center gap-2"
               >
-                <span>💾</span>
                 Save Answers
               </button>
+
               <button
                 onClick={generateAndSaveInsights}
-                disabled={loadingInsights || Object.keys(responses).length === 0}
-                className="px-6 py-3 rounded-lg font-bold text-base transition-all
-                  bg-amber-500 text-white border-2 border-amber-600
-                  hover:bg-amber-600 hover:border-amber-700
-                  disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-500
-                  flex items-center justify-center gap-2 min-w-[200px]"
+                disabled={loadingInsights || currentTier === SubscriptionTier.FREE}
+                className={`px-6 py-3 rounded-lg font-bold text-base transition-all flex items-center justify-center gap-2 min-w-[200px]
+                  ${currentTier === SubscriptionTier.FREE 
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
+                    : 'bg-amber-500 text-white border-2 border-amber-600 hover:bg-amber-600 hover:border-amber-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {loadingInsights ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Generating...</span>
                   </>
+                ) : currentTier === SubscriptionTier.FREE ? (
+                  "Upgrade to Generate Insights"
                 ) : (
                   <>
                     <span>⚡</span>
@@ -429,7 +380,7 @@ const Frequency = () => {
             </div>
           </div>
 
-          {/* Insights Panel - Clear and readable */}
+          {/* Insights Panel */}
           {showInsights && cachedInsights && (
             <div className="w-full bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200 p-6 shadow-xl">
               <div className="flex justify-between items-center mb-4 border-b border-amber-200 pb-3">
@@ -450,11 +401,18 @@ const Frequency = () => {
           )}
 
           {/* No Insights Message */}
-          {Object.keys(responses).length > 0 && !showInsights && (
+          {Object.keys(responses).length > 0 && !showInsights && currentTier !== SubscriptionTier.FREE && (
             <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 text-center">
               <p className="text-amber-700 text-lg font-medium">
                 Click "Generate Insights" above to see your personalized analysis
               </p>
+            </div>
+          )}
+
+          {currentTier === SubscriptionTier.FREE && (
+            <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 text-center">
+              <p className="text-amber-800 text-lg font-bold mb-2">Upgrade to unlock AI Insights</p>
+              <p className="text-amber-600 mb-4">Pro Lite and Premium users get personalized dietary analysis.</p>
             </div>
           )}
         </div>

@@ -436,7 +436,7 @@ const Register = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-amber-500 text-white py-3.5 px-4 rounded-xl hover:bg-amber-600 focus:ring-4 focus:ring-amber-200 transition duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-amber-200 mt-6"
+              className="w-full bg-amber-500 text-white py-3.5 px-4 rounded-xl hover:bg-amber-600 focus:ring-4 focus:ring-amber-200 transition duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-amber-200 mt-6 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -468,7 +468,7 @@ const Register = () => {
               Already have an account?{' '}
               <button 
                 onClick={() => navigate('/login')} 
-                className="font-semibold text-amber-600 hover:text-amber-500"
+                className="font-semibold text-amber-600 hover:text-amber-500 cursor-pointer"
               >
                 Sign In
               </button>

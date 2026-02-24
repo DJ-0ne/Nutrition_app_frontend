@@ -16,15 +16,8 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { useAuth } from '../../../auth/authtoken';
 
-// REAL auth using your backend
-const useAuth = () => {
-  const token = localStorage.getItem('access_token');
-  return {
-    token: token,
-    apiBaseURL: 'http://localhost:8000/api'
-  };
-};
 
 // Medical conditions matching your Django model
 const COMMON_CONDITIONS = {
@@ -290,7 +283,7 @@ const Anthropometric = ({ onSave = () => {} }) => {
                     setActiveTab('basics');
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all  ${
                     activeTab === 'basics'
                       ? 'bg-white text-amber-700 shadow-lg'
                       : 'text-amber-100 hover:bg-amber-800/40'
@@ -303,7 +296,7 @@ const Anthropometric = ({ onSave = () => {} }) => {
                     setActiveTab('conditions');
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all  ${
                     activeTab === 'conditions'
                       ? 'bg-white text-amber-700 shadow-lg'
                       : 'text-amber-100 hover:bg-amber-800/40'
@@ -539,7 +532,7 @@ const Anthropometric = ({ onSave = () => {} }) => {
                   <button
                     type="button"
                     onClick={() => setActiveTab('conditions')}
-                    className="w-full sm:w-auto mt-4 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 mx-auto"
+                    className="w-full sm:w-auto mt-4 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 mx-auto cursor-pointer"
                   >
                     Next: Health Conditions
                     <ChevronRight className="w-5 h-5" />
@@ -633,14 +626,14 @@ const Anthropometric = ({ onSave = () => {} }) => {
                     <button
                       type="button"
                       onClick={() => setActiveTab('basics')}
-                      className="w-full sm:w-auto px-6 py-3 border-2 border-gray-200 hover:border-amber-500 text-gray-700 font-medium rounded-xl transition-all"
+                      className="w-full sm:w-auto cursor-pointer px-6 py-3 border-2 border-gray-200 hover:border-amber-500 text-gray-700 font-medium rounded-xl transition-all"
                     >
                       Back
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="w-full sm:flex-1 px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30"
+                      className="w-full sm:flex-1 cursor-pointer px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30"
                     >
                       {isSaving ? (
                         <>

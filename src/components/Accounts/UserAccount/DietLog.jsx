@@ -1,162 +1,23 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-
-// Dummy auth for now
-const useAuth = () => ({
-  apiBaseURL: 'http://localhost:8000'
-});
-
-// Constants
-const MEAL_TYPES = [
-  { value: 'breakfast', label: 'Breakfast' },
-  { value: 'morning_snack', label: 'Morning Snack' },
-  { value: 'lunch', label: 'Lunch' },
-  { value: 'afternoon_snack', label: 'Afternoon Snack' },
-  { value: 'dinner', label: 'Dinner' },
-  { value: 'evening_snack', label: 'Evening Snack' }
-];
-
-const SubscriptionTier = {
-  FREE: 'free',
-  PREMIUM: 'premium',
-  PROFESSIONAL: 'professional'
-};
-
-// Dummy data
-const dummyFoods = [
-  {
-    id: '1',
-    englishName: 'Sukuma Wiki (Collard Greens)',
-    swahiliName: 'Sukuma Wiki',
-    localNames: ['Collard Greens', 'Kale'],
-    category: 'Vegetables',
-    nutrientsPer100g: { calories: 32, protein: 2.5, fat: 0.5, carbs: 5.5, fiber: 2.0 },
-    commonPortions: [
-      { id: 'p1', name: '1 cup chopped', gramEquivalent: 130, description: 'Chopped leaves' },
-      { id: 'p2', name: '1 bunch', gramEquivalent: 350, description: 'Whole bunch' },
-      { id: 'p3', name: '1 handful', gramEquivalent: 50, description: 'Handful of leaves' }
-    ]
-  },
-  {
-    id: '2',
-    englishName: 'Githeri (Maize & Beans)',
-    swahiliName: 'Githeri',
-    localNames: ['Maize and Beans', 'Mixed Stew'],
-    category: 'Main Dishes',
-    nutrientsPer100g: { calories: 135, protein: 6.5, fat: 2.5, carbs: 22, fiber: 4.5 },
-    commonPortions: [
-      { id: 'p1', name: '1 cup', gramEquivalent: 240, description: 'Cooked' },
-      { id: 'p2', name: '1 bowl', gramEquivalent: 350, description: 'Standard serving' },
-      { id: 'p3', name: '1 ladle', gramEquivalent: 150, description: 'Ladle serving' }
-    ]
-  },
-  {
-    id: '3',
-    englishName: 'Ugali (Cornmeal Porridge)',
-    swahiliName: 'Ugali',
-    localNames: ['Cornmeal', 'Nsima', 'Sadza'],
-    category: 'Staples',
-    nutrientsPer100g: { calories: 120, protein: 2.5, fat: 0.5, carbs: 26, fiber: 1.5 },
-    commonPortions: [
-      { id: 'p1', name: '1 slice', gramEquivalent: 150, description: 'Standard slice' },
-      { id: 'p2', name: '1 ball', gramEquivalent: 200, description: 'Hand-formed ball' },
-      { id: 'p3', name: '1 serving', gramEquivalent: 180, description: 'Restaurant serving' }
-    ]
-  },
-  {
-    id: '4',
-    englishName: 'Nyama Choma (Grilled Meat)',
-    swahiliName: 'Nyama Choma',
-    localNames: ['Grilled Meat', 'Roasted Meat'],
-    category: 'Meat',
-    nutrientsPer100g: { calories: 250, protein: 28, fat: 15, carbs: 0, fiber: 0 },
-    commonPortions: [
-      { id: 'p1', name: '1 piece', gramEquivalent: 150, description: 'Single piece' },
-      { id: 'p2', name: '1 portion', gramEquivalent: 250, description: 'Standard portion' },
-      { id: 'p3', name: '1 kg', gramEquivalent: 1000, description: 'Kilogram' }
-    ]
-  },
-  {
-    id: '5',
-    englishName: 'Mursik (Fermented Milk)',
-    swahiliName: 'Mursik',
-    localNames: ['Fermented Milk', 'Sour Milk'],
-    category: 'Dairy',
-    nutrientsPer100g: { calories: 85, protein: 5, fat: 4, carbs: 7, fiber: 0 },
-    commonPortions: [
-      { id: 'p1', name: '1 cup', gramEquivalent: 240, description: 'Traditional cup' },
-      { id: 'p2', name: '1 gourd', gramEquivalent: 500, description: 'Small gourd' },
-      { id: 'p3', name: '1 glass', gramEquivalent: 200, description: 'Glass serving' }
-    ]
-  }
-];
-
-const dummyLogs = [
-  {
-    id: 'log1',
-    foodId: '1',
-    foodName: 'Sukuma Wiki (Collard Greens)',
-    portionId: 'p1',
-    portionName: '1 cup chopped',
-    grams: 130,
-    date: new Date().toISOString().slice(0, 10),
-    mealType: 'lunch',
-    nutrients: { calories: 42, protein: 3.3, fat: 0.7, carbs: 7.2, fiber: 2.6 },
-    finished: true
-  },
-  {
-    id: 'log2',
-    foodId: '2',
-    foodName: 'Githeri (Maize & Beans)',
-    portionId: 'p2',
-    portionName: '1 bowl',
-    grams: 350,
-    date: new Date().toISOString().slice(0, 10),
-    mealType: 'lunch',
-    nutrients: { calories: 473, protein: 22.8, fat: 8.8, carbs: 77, fiber: 15.8 },
-    finished: true
-  },
-  {
-    id: 'log3',
-    foodId: '3',
-    foodName: 'Ugali (Cornmeal Porridge)',
-    portionId: 'p1',
-    portionName: '1 slice',
-    grams: 150,
-    date: new Date().toISOString().slice(0, 10),
-    mealType: 'lunch',
-    nutrients: { calories: 180, protein: 3.8, fat: 0.8, carbs: 39, fiber: 2.3 },
-    finished: true
-  }
-];
-
-const dummyAnthroData = {
-  heightCm: 175,
-  weightKg: 80,
-  age: 32,
-  sex: 'male',
-  waistCm: 92,
-  conditions: ['Hypertension'],
-  conditionsOnly: '',
-  activityLevel: 3,
-  date: new Date().toISOString()
-};
+import { useAuth } from '../../../auth/useAuth';
+import { MEAL_TYPES } from '../../../constants/mealTypes';
+import { SubscriptionTier } from '../../../constants/subscriptionTier';
+import { useNavigate } from 'react-router-dom';
 
 const DietLog = ({ 
-  logs = dummyLogs, 
-  userTier = SubscriptionTier.PREMIUM, 
-  onLog = () => {}, 
-  onClear = () => {}, 
-  anthroData = dummyAnthroData, 
+  userTier: propUserTier = SubscriptionTier.PREMIUM, 
   onNavigate = () => {} 
 }) => {
-  const { apiBaseURL } = useAuth();
+  const { token, apiBaseURL } = useAuth();
+  const navigate = useNavigate();
+
+  const [currentTier, setCurrentTier] = useState(propUserTier);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [allFoods, setAllFoods] = useState(dummyFoods);
+  const [allFoods, setAllFoods] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedPortion, setSelectedPortion] = useState(null);
@@ -168,7 +29,13 @@ const DietLog = ({
   const [finished, setFinished] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
 
-  // ---------- Memoised totals ----------
+  const [anthroData, setAnthroData] = useState(null);
+  const [logs, setLogs] = useState([]);
+
+  useEffect(() => {
+    if (propUserTier) setCurrentTier(propUserTier);
+  }, [propUserTier]);
+
   const totals = useMemo(() => {
     const initial = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
     return logs.reduce((acc, log) => {
@@ -181,60 +48,162 @@ const DietLog = ({
     }, initial);
   }, [logs]);
 
-  // ---------- Debounced food search ----------
-  useEffect(() => {
-    if (!searchTerm.trim() || searchTerm.length < 3) {
-      setAllFoods(dummyFoods);
+  const fetchAnthroData = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${apiBaseURL}/api/profile/`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAnthroData(data);
+        const fetchedTier = data.tier || data.subscription_tier || data.subscriptionTier;
+        if (fetchedTier) setCurrentTier(fetchedTier);
+      } else if (res.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
+    } catch (err) {
+      console.error('Profile fetch error:', err);
+    }
+  };
+
+  const fetchLogs = async () => {
+    if (!token) {
+      setLogs([]);
       return;
     }
+    try {
+      const res = await fetch(`${apiBaseURL}/api/food-logs/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const searchFoods = async (query) => {
-      setIsLoading(true);
-      
-      // Simulate API search with dummy data
-      setTimeout(() => {
-        const filtered = dummyFoods.filter(food => 
-          food.englishName.toLowerCase().includes(query.toLowerCase()) ||
-          food.swahiliName.toLowerCase().includes(query.toLowerCase())
-        );
-        setAllFoods(filtered);
-        
-        if (filtered.length === 0) {
-          toast.error('Food not found');
-        }
-        setIsLoading(false);
-      }, 800);
-    };
+      if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
 
-    const timer = setTimeout(() => {
-      searchFoods(searchTerm);
-    }, 600);
+      const rawData = await res.json();
+      const data = Array.isArray(rawData) ? rawData : (rawData.results || []);
 
+      const normalized = data.map(log => ({
+        ...log,
+        foodName: log.food_name || log.foodName,
+        portionName: log.portion_name || log.portionName,
+        mealType: log.meal_type || log.mealType,
+      }));
+
+      setLogs(normalized);
+    } catch (err) {
+      console.error('Fetch logs error:', err);
+      toast.error('Could not load your meal history');
+      setLogs([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnthroData();
+    fetchLogs();
+  }, [token]);
+
+  useEffect(() => {
+    if (!searchTerm.trim() || searchTerm.length < 3) {
+      setAllFoods([]);
+      return;
+    }
+    const timer = setTimeout(() => searchFoods(searchTerm), 600);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // ---------- Dummy Photo Scan ----------
+  const searchFoods = async (query) => {
+    if (!token) {
+      toast.error('Authentication required');
+      setAllFoods([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${apiBaseURL}/api/search-foods/?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+
+      const data = await res.json();
+
+      const transformed = data.map((f) => ({
+        id: f.id.toString(),
+        englishName: f.english_name,
+        swahiliName: f.swahili_name || '',
+        localNames: f.local_names || [],
+        category: f.category || 'Other',
+        nutrientsPer100g: f.nutrients_per_100g || { calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 },
+        commonPortions: (f.common_portions || []).map((p) => ({
+          id: p.id.toString(),
+          name: p.name,
+          gramEquivalent: p.gram_equivalent,
+          description: p.description || '',
+        })),
+      }));
+
+      setAllFoods(transformed);
+      if (transformed.length === 0) toast.error('Food not found');
+    } catch (err) {
+      console.error('Food search error:', err);
+      toast.error('Failed to load foods – try again');
+      setAllFoods([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handlePhotoScan = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!token) {
+      toast.error('Authentication required');
+      return;
+    }
 
     setIsScanning(true);
+    const formData = new FormData();
+    formData.append('photo', file);
 
-    // Simulate AI analysis
-    setTimeout(() => {
-      const randomFood = dummyFoods[Math.floor(Math.random() * dummyFoods.length)];
-      setSearchTerm(randomFood.englishName);
-      toast.success(`Food detected: ${randomFood.englishName}`);
+    try {
+      const res = await fetch(`${apiBaseURL}/api/analyze-food-photo/`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Analysis failed');
+      }
+
+      const data = await res.json();
+      const detected = data.detected_food?.trim();
+
+      if (detected && detected !== 'No food detected' && detected.toLowerCase() !== 'none') {
+        setSearchTerm(detected);
+        toast.success(`Food detected: ${detected}`);
+      } else {
+        toast.error('No food detected in the image');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to analyze photo');
+    } finally {
       setIsScanning(false);
       e.target.value = '';
-    }, 2000);
+    }
   };
 
-  // ---------- Log a meal ----------
-  const handleLog = () => {
+  const handleLog = async () => {
     if (!selectedFood || !selectedPortion) return;
 
-    if (userTier === SubscriptionTier.FREE && logs.length >= 50) {
+    if (currentTier === SubscriptionTier.FREE && logs.length >= 50) {
       toast.error('Free tier log limit reached. Upgrade for unlimited tracking!');
       return;
     }
@@ -242,83 +211,114 @@ const DietLog = ({
     const grams = selectedPortion.gramEquivalent * quantity;
 
     const nutrients = Object.entries(selectedFood.nutrientsPer100g).reduce((acc, [key, val]) => {
-      acc[key] = Number((val * grams) / 100);
+      acc[key] = Number(((val || 0) * grams) / 100);
       return acc;
     }, {});
 
-    const newLog = {
-      id: Date.now().toString(),
-      foodId: selectedFood.id,
-      foodName: selectedFood.englishName,
-      portionId: selectedPortion.id,
-      portionName: selectedPortion.name,
-      grams,
-      date: new Date().toISOString().slice(0, 10),
-      mealType,
+    const payload = {
+      food: Number(selectedFood.id),
+      food_name: selectedFood.englishName,
+      portion: Number(selectedPortion.id),
+      portion_name: selectedPortion.name,
+      grams: Number(grams),
+      meal_type: mealType,
       nutrients,
       finished,
+      date: new Date().toISOString().slice(0, 10),
     };
 
-    onLog(newLog);
-    toast.success('Meal logged successfully!');
+    try {
+      const res = await fetch(`${apiBaseURL}/api/food-logs/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-    // Reset form
-    setSelectedFood(null);
-    setSelectedPortion(null);
-    setQuantity(1);
-    setSearchTerm('');
-    setMealType('breakfast');
-    setFinished(true);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Failed to save meal');
+      }
+
+      toast.success('Meal logged successfully!');
+      await fetchLogs();
+
+      setSelectedFood(null);
+      setSelectedPortion(null);
+      setQuantity(1);
+      setSearchTerm('');
+      setMealType('breakfast');
+      setFinished(true);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || 'Failed to log meal');
+    }
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
     if (logs.length === 0) return;
     if (!window.confirm('Clear all meal logs? This cannot be undone.')) return;
-    onClear();
-    toast.success('Meal history cleared');
+
+    try {
+      const res = await fetch(`${apiBaseURL}/api/food-logs/clear/`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setLogs([]);
+        toast.success('Meal history cleared');
+      } else {
+        toast.error('Failed to clear logs');
+      }
+    } catch (err) {
+      toast.error('Failed to clear logs');
+    }
   };
 
-  // ---------- Generate AI insights ----------
   const handleGenerateInsights = async () => {
     if (!anthroData) {
-      toast.error('Please complete your profile first.');
+      toast.error('Please complete your profile in Anthro/profile first.');
       return;
     }
     if (logs.length === 0) {
       toast.error('Log some meals first to generate insights.');
       return;
     }
+    if (!token) {
+      toast.error('Authentication required');
+      return;
+    }
 
     setLoadingInsights(true);
+    try {
+      const res = await fetch(`${apiBaseURL}/api/generate-insights/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ logs, profile: anthroData }),
+      });
 
-    // Simulate AI insights
-    setTimeout(() => {
-      const insights = `# Nutritional Analysis
-    
-- Your protein intake (${totals.protein.toFixed(1)}g) is adequate for your activity level
-- Consider increasing fiber intake - current ${totals.fiber.toFixed(1)}g vs recommended 25-30g
-- Your carbohydrate distribution is well-balanced across meals
-- Based on your profile, we recommend monitoring sodium intake
+      if (!res.ok) throw new Error('Failed to fetch insights');
 
-# Recommendations
-- Add more leafy greens to increase micronutrient density
-- Consider incorporating more legumes for plant-based protein
-- Your current meal timing aligns well with your activity pattern`;
-
-      setInsightText(insights);
+      const data = await res.json();
+      setInsightText(data.insights);
       setShowInsights(true);
+    } catch (err) {
+      toast.error('Failed to generate insights');
+    } finally {
       setLoadingInsights(false);
-    }, 1500);
+    }
   };
 
-  // Helper to render formatted insights
   const renderInsights = (text) => {
     const lines = text.split('\n').filter(line => line.trim() !== '');
-    
     return lines.map((line, index) => {
       const trimmed = line.trim();
-      
-      // Title (starts with #)
       if (trimmed.startsWith('#')) {
         return (
           <h5 key={index} className="text-lg font-extrabold text-transparent bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text mb-3 mt-2 first:mt-0">
@@ -326,8 +326,6 @@ const DietLog = ({
           </h5>
         );
       }
-      
-      // Bullet point (starts with -)
       if (trimmed.startsWith('-')) {
         return (
           <div key={index} className="flex items-start gap-3 mb-2">
@@ -338,8 +336,6 @@ const DietLog = ({
           </div>
         );
       }
-      
-      // Regular paragraph
       return (
         <p key={index} className="text-slate-700 text-base leading-relaxed mb-3 last:mb-0 break-words">
           {trimmed}
@@ -350,9 +346,7 @@ const DietLog = ({
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50/30 overflow-x-hidden">
-      {/* Main Content */}
       <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-[2000px] mx-auto">
-        {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="w-full sm:w-auto">
             <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-800 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent break-words">
@@ -365,19 +359,15 @@ const DietLog = ({
           <button
             onClick={handleClear}
             disabled={logs.length === 0}
-            className="text-xs text-red-600 font-black px-3 sm:px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 transition-all duration-300 border border-red-100 hover:scale-105 hover:shadow-lg shadow-red-100/50 disabled:opacity-50 whitespace-nowrap"
+            className="text-xs text-red-600 font-black px-3 sm:px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 transition-all duration-300 border border-red-100 hover:scale-105 hover:shadow-lg shadow-red-100/50 disabled:opacity-50 whitespace-nowrap cursor-pointer"
           >
             CLEAR LOGS
           </button>
         </header>
 
-        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
-          {/* Left Column - Logging Interface */}
           <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-            {/* AI Quick Actions Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {/* AI Photo Scan Card */}
               <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
                 <div className="relative z-10 flex flex-col h-full justify-between">
                   <div>
@@ -386,7 +376,7 @@ const DietLog = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <h3 className="font-black uppercase tracking-widest text-[10px] sm:text-xs">AI Photo Scan</h3>
+                      <h3 className="font-black uppercase tracking-widest text-[10px] sm:text-xs">AI PHOTO SCAN</h3>
                     </div>
                     <p className="text-[9px] sm:text-[10px] text-amber-100 font-medium opacity-80">Snap a pic to auto-log</p>
                   </div>
@@ -412,10 +402,9 @@ const DietLog = ({
                 <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
               </div>
 
-              {/* 24h Recall Link Card */}
               <button
-                onClick={() => onNavigate('recall')}
-                className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl sm:rounded-2xl p-4 text-left shadow-sm hover:shadow-md hover:border-amber-200 transition-all group relative overflow-hidden"
+                onClick={() => navigate('/user/Recall')}
+                className="bg-white/70 backdrop-blur-xl border border-white/50 rounded-xl sm:rounded-2xl p-4 text-left shadow-sm hover:shadow-md hover:border-amber-200 transition-all group relative overflow-hidden cursor-pointer"
               >
                 <div className="relative z-10 flex flex-col h-full justify-between">
                   <div>
@@ -423,7 +412,7 @@ const DietLog = ({
                       <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <h3 className="font-black uppercase tracking-widest text-[10px] sm:text-xs">Full 24h Recall</h3>
+                      <h3 className="font-black uppercase tracking-widest text-[10px] sm:text-xs">FULL 24H RECALL</h3>
                     </div>
                     <p className="text-slate-500 text-[9px] sm:text-[10px] font-medium">Missed a meal? Retro-log it now.</p>
                   </div>
@@ -434,18 +423,17 @@ const DietLog = ({
               </button>
             </div>
 
-            {/* Log Form Card */}
             <div className="bg-white/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-white/50 transition-all duration-500 hover:shadow-[0_30px_60px_rgba(251,146,60,0.1)] hover:border-amber-200/50 relative group">
               <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/10 transition-all duration-700 pointer-events-none"></div>
 
               {!selectedFood ? (
-                <div className="relative transition-all duration-300 z-10">
-                  <div className="absolute inset-y-0 left-3 sm:left-4 flex items-center pointer-events-none text-slate-400">
+                <div className="relative transition-all duration-300 z-10 ">
+                  <div className="absolute inset-y-0 left-4 sm:left-4 flex items-center pointer-events-none text-slate-400">
                     <Search className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <input
                     type="text"
-                    className="w-full bg-slate-50/50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white rounded-lg sm:rounded-xl md:rounded-2xl pl-10 sm:pl-12 p-2.5 sm:p-3 md:p-4 text-slate-800 transition-all duration-300 font-medium placeholder:text-slate-400 shadow-sm focus:shadow-lg focus:shadow-amber-200/50 text-sm sm:text-base md:text-lg"
+                    className="w-full bg-slate-50/50 border-2 border-slate-100 focus:border-amber-500 focus:bg-white rounded-lg sm:rounded-xl md:rounded-2xl pl-10 sm:pl-12 p-2.5 sm:p-3 md:p-4 text-slate-800 transition-all duration-300 font-medium placeholder:text-slate-400 placeholder:text-right shadow-sm focus:shadow-lg focus:shadow-amber-200/50 text-sm sm:text-base md:text-lg"
                     placeholder="Find Kenyan food (e.g., Sukuma Wiki, Githeri...)"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
@@ -456,7 +444,7 @@ const DietLog = ({
                     </div>
                   )}
 
-                  {allFoods.length > 0 && searchTerm.length >= 3 && (
+                  {allFoods.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl rounded-lg sm:rounded-xl md:rounded-2xl mt-2 max-h-60 sm:max-h-72 overflow-y-auto z-50 divide-y divide-slate-100">
                       {allFoods.map((f, idx) => (
                         <button
@@ -494,7 +482,6 @@ const DietLog = ({
                         setSelectedPortion(null);
                         setQuantity(1);
                       }}
-                      aria-label="Close"
                       className="bg-white/20 hover:bg-white/40 p-1.5 sm:p-2 rounded-full transition-all hover:scale-110 hover:rotate-90 flex-shrink-0"
                     >
                       <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -504,11 +491,10 @@ const DietLog = ({
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
-                    {/* Portions */}
                     <div className="space-y-2 sm:space-y-3">
                       <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Portion System</label>
                       <div className="grid grid-cols-1 gap-1.5 sm:gap-2 max-h-40 sm:max-h-48 md:max-h-60 overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
-                        {selectedFood.commonPortions.map((p, idx) => (
+                        {selectedFood.commonPortions.map((p) => (
                           <button
                             key={p.id}
                             onClick={() => setSelectedPortion(p)}
@@ -525,17 +511,11 @@ const DietLog = ({
                       </div>
                     </div>
 
-                    {/* Quantity and Meal Details */}
                     <div className="space-y-3 sm:space-y-4">
                       <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</label>
+                        <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity Multiplier</label>
                         <div className="flex items-center justify-center bg-slate-50 border-2 border-slate-100 rounded-lg sm:rounded-xl p-0.5 sm:p-1 focus-within:border-amber-500">
-                          <button 
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))} 
-                            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 font-bold text-lg sm:text-xl transition-all hover:scale-110 hover:bg-white rounded-lg flex-shrink-0"
-                          >
-                            -
-                          </button>
+                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 font-bold text-lg sm:text-xl transition-all hover:scale-110 hover:bg-white rounded-lg flex-shrink-0">-</button>
                           <input
                             type="number"
                             min="1"
@@ -543,12 +523,7 @@ const DietLog = ({
                             onChange={e => setQuantity(Math.max(1, Number(e.target.value)))}
                             className="w-12 sm:w-14 md:w-16 bg-transparent border-none text-center font-black text-lg sm:text-xl md:text-2xl text-slate-800 focus:ring-0"
                           />
-                          <button 
-                            onClick={() => setQuantity(quantity + 1)} 
-                            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 font-bold text-lg sm:text-xl transition-all hover:scale-110 hover:bg-white rounded-lg flex-shrink-0"
-                          >
-                            +
-                          </button>
+                          <button onClick={() => setQuantity(quantity + 1)} className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center text-slate-400 hover:text-amber-600 font-bold text-lg sm:text-xl transition-all hover:scale-110 hover:bg-white rounded-lg flex-shrink-0">+</button>
                         </div>
                       </div>
 
@@ -566,21 +541,17 @@ const DietLog = ({
                       </div>
 
                       <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+                        <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">Consumption Status</label>
                         <div className="flex bg-slate-50 p-0.5 sm:p-1 rounded-lg sm:rounded-xl border-2 border-slate-100">
                           <button
                             onClick={() => setFinished(true)}
-                            className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] md:text-xs font-black transition-all ${
-                              finished ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-400 hover:text-slate-600'
-                            }`}
+                            className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] md:text-xs font-black transition-all ${finished ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                           >
                             FINISHED
                           </button>
                           <button
                             onClick={() => setFinished(false)}
-                            className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] md:text-xs font-black transition-all ${
-                              !finished ? 'bg-white text-red-500 shadow-md' : 'text-slate-400 hover:text-slate-600'
-                            }`}
+                            className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[9px] sm:text-[10px] md:text-xs font-black transition-all ${!finished ? 'bg-white text-red-500 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
                           >
                             LEFTOVERS
                           </button>
@@ -592,7 +563,7 @@ const DietLog = ({
                   <button
                     onClick={handleLog}
                     disabled={!selectedPortion}
-                    className="w-full bg-slate-900 hover:bg-black text-white font-black py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-xl disabled:opacity-50 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 group text-sm sm:text-base"
+                    className="w-full bg-slate-900 hover:bg-black text-white font-black py-3 sm:py-4 rounded-lg sm:rounded-xl shadow-xl disabled:opacity-50 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 group text-sm sm:text-base cursor-pointer"
                   >
                     <span>COMMIT TO DIARY</span>
                     <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -602,17 +573,15 @@ const DietLog = ({
             </div>
           </div>
 
-          {/* Right Column - Totals & Insights */}
           <div className="lg:col-span-5 space-y-4 sm:space-y-6 lg:sticky lg:top-24">
-            {/* Nutrition Totals */}
             <section className="bg-slate-900 p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl text-white shadow-lg border border-slate-800 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/20 transition-all duration-700"></div>
 
-              <h3 className="text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.2em] opacity-50 mb-3 sm:mb-4 md:mb-6 relative z-10">Daily Totals</h3>
+              <h3 className="text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.2em] opacity-50 mb-3 sm:mb-4 md:mb-6 relative z-10">Real-Time Nutritional Snapshot</h3>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 relative z-10">
                 <div className="space-y-0.5 sm:space-y-1 hover:scale-105 origin-left transition-all">
                   <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-emerald-400 tracking-tighter break-words">{totals.calories.toFixed(0)}</p>
-                  <p className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Calories</p>
+                  <p className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Total kCal</p>
                 </div>
                 <div className="space-y-0.5 sm:space-y-1 hover:scale-105 origin-left transition-all">
                   <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-blue-400 break-words">{totals.protein.toFixed(1)}<span className="text-[8px] sm:text-[9px] md:text-xs ml-0.5 text-blue-300">g</span></p>
@@ -620,7 +589,7 @@ const DietLog = ({
                 </div>
                 <div className="space-y-0.5 sm:space-y-1 hover:scale-105 origin-left transition-all">
                   <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-amber-400 break-words">{totals.carbs.toFixed(1)}<span className="text-[8px] sm:text-[9px] md:text-xs ml-0.5 text-amber-300">g</span></p>
-                  <p className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Carbs</p>
+                  <p className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-widest opacity-60">Carbohydrates</p>
                 </div>
                 <div className="space-y-0.5 sm:space-y-1 hover:scale-105 origin-left transition-all">
                   <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-rose-400 break-words">{totals.fat.toFixed(1)}<span className="text-[8px] sm:text-[9px] md:text-xs ml-0.5 text-rose-300">g</span></p>
@@ -633,10 +602,9 @@ const DietLog = ({
               </div>
             </section>
 
-            {/* AI Insights */}
             {logs.length > 0 && (
               <div className="space-y-3 sm:space-y-4">
-                {userTier === SubscriptionTier.FREE ? (
+                {currentTier === SubscriptionTier.FREE ? (
                   <div className="bg-white/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl border border-white/50 text-center">
                     <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest mb-2">Upgrade for AI Analysis</p>
                     <button 
@@ -650,7 +618,7 @@ const DietLog = ({
                   <button
                     onClick={handleGenerateInsights}
                     disabled={loadingInsights}
-                    className="w-full bg-white border-2 border-amber-100 text-amber-600 font-black py-3 sm:py-4 rounded-lg sm:rounded-xl md:rounded-2xl hover:bg-amber-50 hover:border-amber-200 transition-all flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-[1.01] active:scale-[0.99] shadow-sm hover:shadow-amber-100 text-xs sm:text-sm"
+                    className="w-full bg-white border-2 border-amber-100 text-amber-600 font-black py-3 sm:py-4 rounded-lg sm:rounded-xl md:rounded-2xl hover:bg-amber-50 hover:border-amber-200 transition-all flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-[1.01] active:scale-[0.99] shadow-sm hover:shadow-amber-100 text-xs sm:text-sm cursor-pointer"
                   >
                     {loadingInsights ? (
                       <>
@@ -671,7 +639,7 @@ const DietLog = ({
                 {showInsights && insightText && (
                   <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl border border-amber-100 animate-in slide-in-from-top-4 duration-300 shadow-sm">
                     <div className="flex justify-between items-center mb-3 sm:mb-4 border-b border-amber-100 pb-2">
-                      <h4 className="text-[9px] sm:text-[10px] md:text-xs font-black text-amber-800 uppercase tracking-widest">Analysis</h4>
+                      <h4 className="text-[9px] sm:text-[10px] md:text-xs font-black text-amber-800 uppercase tracking-widest">Diagnostic Summary</h4>
                       <button 
                         onClick={() => setShowInsights(false)} 
                         className="text-amber-400 hover:text-amber-600 transition-colors font-bold text-base sm:text-lg"
@@ -687,30 +655,26 @@ const DietLog = ({
               </div>
             )}
 
-            {/* Log History */}
             <div className="bg-white/70 backdrop-blur-xl rounded-xl sm:rounded-2xl md:rounded-3xl border border-white/50 shadow-lg overflow-hidden">
               <div className="p-2.5 sm:p-3 md:p-4 bg-slate-50/80 backdrop-blur-sm border-b border-slate-100 flex justify-between items-center">
-                <h3 className="text-[9px] sm:text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">Today's Log</h3>
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-slate-300">{logs.length} items</span>
+                <h3 className="text-[9px] sm:text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">Entry History</h3>
+                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-slate-300">{logs.length} ITEMS</span>
               </div>
               <div className="divide-y divide-slate-100 max-h-60 sm:max-h-72 md:max-h-80 overflow-y-auto custom-scrollbar">
                 {logs.length === 0 ? (
                   <div className="p-6 sm:p-8 md:p-10 lg:p-12 text-center text-slate-400 text-xs sm:text-sm font-medium">
-                    No entries yet. Start logging meals!
+                    No entries recorded yet. Start logging meals!
                   </div>
                 ) : (
                   logs.map((log, idx) => {
                     const mealLabel = MEAL_TYPES.find(m => m.value === log.mealType)?.label || log.mealType;
                     return (
-                      <div key={log.id} className="p-2.5 sm:p-3 md:p-4 hover:bg-amber-50/30 transition-all flex justify-between items-center group">
+                      <div key={log.id} className="p-2.5 sm:p-3 md:p-4 hover:bg-amber-50/30 transition-all flex justify-between items-center group animate-in fade-in slide-in-from-left-4" style={{ animationDelay: `${idx * 30}ms` }}>
                         <div className="pr-2">
                           <p className="text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-wider text-amber-400/80 mb-0.5">{mealLabel}</p>
                           <p className="font-bold text-slate-800 text-xs sm:text-sm group-hover:text-amber-700 transition-colors break-words">{log.foodName}</p>
                           <p className="text-[8px] sm:text-[9px] md:text-[10px] text-slate-400 font-medium break-words">
-                            {log.portionName} • {log.grams}g • {' '}
-                            <span className={log.finished ? 'text-emerald-500' : 'text-red-400'}>
-                              {log.finished ? 'Finished' : 'Leftovers'}
-                            </span>
+                            {log.portionName} • {log.grams}g • <span className={log.finished ? 'text-emerald-500' : 'text-red-400'}>{log.finished ? 'Finished' : 'Leftovers'}</span>
                           </p>
                         </div>
                         <div className="text-right flex-shrink-0">

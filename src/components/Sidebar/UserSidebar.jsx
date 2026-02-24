@@ -4,7 +4,7 @@ import userData from '../sidebarData/UserSidebarData/userData';
 import { useNavigate } from 'react-router-dom';
 
 function UserSidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ function UserSidebar() {
                 key={key}
                 onClick={() => handleNavigation(val.link)}
                 className={`
-                  flex flex-col items-center justify-center px-3 py-1 rounded-xl transition-all duration-300
+                  flex flex-col items-center justify-center  px-3 py-1 rounded-xl transition-all duration-300
                   ${window.location.pathname === val.link 
                     ? 'text-white scale-110 bg-amber-600' 
                     : 'text-amber-100 hover:text-white hover:bg-amber-600/50'
@@ -160,7 +160,7 @@ function UserSidebar() {
               <button 
                 onClick={toggleSidebar}
                 className={`
-                  bg-amber-600/50 hover:bg-amber-600 backdrop-blur-sm text-white rounded-full p-2 
+                  bg-amber-600/50 hover:bg-amber-600 backdrop-blur-sm text-white rounded-full p-2 cursor-pointer 
                   shadow-lg border-2 border-amber-400/40 transition-all duration-300 hover:scale-110 hover:rotate-180
                   ${isCollapsed ? 'absolute -right-3 top-5' : ''}
                 `}

@@ -24,15 +24,15 @@ export const AuthProvider = ({ children }) => {
   // Initialize auth from localStorage
   useEffect(() => {
     const initializeAuth = async () => {
-      const accessToken = localStorage.getItem('access_token');
-      const refreshToken = localStorage.getItem('refresh_token');
+      const access_token = localStorage.getItem('access_token');
+      const refresh_token = localStorage.getItem('refresh_token');
       const storedUser = localStorage.getItem('user');
       
-      if (accessToken && storedUser) {
+      if (access_token && storedUser) {
         try {
           const response = await fetch(`${API_BASE_URL}/api/auth/validate-token/`, {
             headers: { 
-              'Authorization': `Bearer ${accessToken}`,
+              'Authorization': `Bearer ${access_token}`,
               'Content-Type': 'application/json',
               'Accept': 'application/json'
             },
@@ -43,9 +43,24 @@ export const AuthProvider = ({ children }) => {
             setUser(data.user);
           } else {
             // Try to refresh token
-            if (refreshToken) {
-              const refreshSuccess = await refreshToken();
-              if (!refreshSuccess) {
+            if (refresh_token) {
+              const refreshSuccess = await refreshTokenFunc();
+              if (refreshSuccess) {
+                const revalidateResponse = await fetch(`${API_BASE_URL}/api/auth/validate-token/`, {
+                  headers: { 
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                  },
+                });
+                
+                if (revalidateResponse.ok) {
+                  const revalidateData = await revalidateResponse.json();
+                  setUser(revalidateData.user);
+                } else {
+                  logout();
+                }
+              } else {
                 logout();
               }
             } else {
@@ -53,9 +68,7 @@ export const AuthProvider = ({ children }) => {
             }
           }
         } catch (err) {
-
           logout();
-          return err;
         }
       }
       setLoading(false);
@@ -67,8 +80,8 @@ export const AuthProvider = ({ children }) => {
   // Auto refresh token
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      if (user) refreshToken();
-    }, 55 * 60 * 1000); // Refresh every 55 minutes
+      if (user) refreshTokenFunc();
+    }, 55 * 60 * 1000);
     
     return () => clearInterval(refreshInterval);
   }, [user]);
@@ -89,7 +102,6 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (!response.ok) {
-        // Handle specific error messages
         if (data.email) throw new Error(data.email[0]);
         if (data.password) throw new Error(data.password[0]);
         if (data.non_field_errors) throw new Error(data.non_field_errors[0]);
@@ -98,7 +110,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Login failed. Please check your credentials.');
       }
       
-      // Save tokens
+      // Save tokens & user
       localStorage.setItem('access_token', data.access);
       localStorage.setItem('refresh_token', data.refresh);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -109,19 +121,23 @@ export const AuthProvider = ({ children }) => {
       
       setUser(data.user);
       
-      // Role-based redirect
+      // ==================== ROLE-BASED REDIRECT ====================
+      // Supports BOTH your custom 'system_admin' role AND Django superuser/staff
       if (data.redirect) {
         navigate(data.redirect);
       } 
+      else if (
+        data.user.is_staff === true || 
+        data.user.is_superuser === true || 
+        data.user.role === 'system_admin'
+      ) {
+        navigate('/admin/dashboard');   
+      } 
       else {
-        // Default redirect based on role
-        if (data.user.role === 'system_admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/user/Home');
-        }
+        navigate('/user/Home');
       }
-      
+      // ============================================================
+
       return { success: true, user: data.user };
       
     } catch (err) {
@@ -132,34 +148,33 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const accessToken = localStorage.getItem('access_token');
-    const refreshToken = localStorage.getItem('refresh_token');
+    const access_token = localStorage.getItem('access_token');
+    const refresh_token = localStorage.getItem('refresh_token');
     
     try {
-      if (accessToken && refreshToken) {
+      if (access_token && refresh_token) {
         await fetch(`${API_BASE_URL}/api/auth/logout/`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ refresh_token: refreshToken }),
+          body: JSON.stringify({ refresh_token: refresh_token }),
         });
       }
     } catch (error) {
-      return error;
+      // Continue anyway
     } finally {
-      // Clear everything regardless of API response
       localStorage.clear();
       setUser(null);
       navigate('/Login');
     }
   };
 
-  const refreshToken = async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
+  const refreshTokenFunc = async () => {
+    const refresh_token = localStorage.getItem('refresh_token');
     
-    if (!refreshToken) {
+    if (!refresh_token) {
       logout();
       return false;
     }
@@ -171,7 +186,7 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        body: JSON.stringify({ refresh_token: refresh_token }),
       });
       
       if (response.ok) {
@@ -186,9 +201,8 @@ export const AuthProvider = ({ children }) => {
         return false;
       }
     } catch (err) {
-      
       logout();
-      return { success: false, error: err };
+      return false;
     }
   };
 
@@ -213,7 +227,7 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     logout,
-    refreshToken,
+    refreshToken: refreshTokenFunc,
     getAuthHeaders,
     isAuthenticated: !!user,
   };

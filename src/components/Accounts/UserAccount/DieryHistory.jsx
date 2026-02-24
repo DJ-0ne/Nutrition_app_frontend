@@ -1,7 +1,46 @@
-import React, { useMemo, useState } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useMemo, useState, useEffect } from 'react';
+import { useAuth } from '../../../auth/useAuth';
 
-const DietHistory = ({ logs = [] }) => {
+
+
+const DietHistory = () => {
+    const { token, apiBaseURL } = useAuth();
+    const [logs, setLogs] = useState([]);
     const [interval, setInterval] = useState(0); // 0 = Days 1-30, 1 = Days 31-60, 2 = Days 61-90
+
+    const fetchLogs = async () => {
+        if (!token) {
+          setLogs([]);
+          return;
+        }
+        try {
+          const res = await fetch(`${apiBaseURL}/api/food-logs/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+    
+          if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
+    
+          const rawData = await res.json();
+          const data = Array.isArray(rawData) ? rawData : (rawData.results || []);
+    
+          const normalized = data.map(log => ({
+            ...log,
+            foodName: log.food_name || log.foodName,
+            portionName: log.portion_name || log.portionName,
+            mealType: log.meal_type || log.mealType,
+          }));
+    
+          setLogs(normalized);
+        } catch (err) {
+          console.error('Fetch logs error:', err);
+          setLogs([]);
+        }
+      };
+    
+      useEffect(() => {
+        fetchLogs();
+      }, [token]);
 
     // Process logs to get last 90 days of real data
     const historyData = useMemo(() => {
@@ -33,12 +72,13 @@ const DietHistory = ({ logs = [] }) => {
         return [...slice].reverse();
     }, [historyData, interval]);
 
+    const daysWithData = useMemo(() => activeData.filter(d => d.calories > 0), [activeData]);
+
     const averageCalories = useMemo(() => {
-        const daysWithData = activeData.filter(d => d.calories > 0);
         if (daysWithData.length === 0) return 0;
         const total = daysWithData.reduce((acc, d) => acc + d.calories, 0);
         return Math.round(total / daysWithData.length);
-    }, [activeData]);
+    }, [daysWithData]);
 
     const gridItems = useMemo(() => {
         if (activeData.length === 0) return [];
@@ -65,9 +105,18 @@ const DietHistory = ({ logs = [] }) => {
                 shadow: 'hover:shadow-xl hover:shadow-red-200/50 hover:-translate-y-0.5'
             };
         }
+        if (calories >= 1200 && calories <= 2400  ) {
+            return {
+                bg: 'bg-gradient-to-br from-green-500 to-green-600',
+                border: 'border-green-400',
+                text: 'text-white',
+                shadow: 'hover:shadow-xl hover:shadow-green-200/50 hover:-translate-y-0.5'
+            };
+        }
+
         if (calories < 1200) {
             return {
-                bg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+                bg: 'bg-gradient-to-br from-amber-500 to-red-500',
                 border: 'border-amber-400',
                 text: 'text-white',
                 shadow: 'hover:shadow-xl hover:shadow-amber-200/50 hover:-translate-y-0.5'
@@ -91,7 +140,7 @@ const DietHistory = ({ logs = [] }) => {
                             {/* Title */}
                             <div className="space-y-1 sm:space-y-2">
                                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-800">
-                                    90-Day 
+                                    30-Day 
                                     <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent block sm:inline sm:ml-2">
                                         Nutrition History
                                     </span>
@@ -135,7 +184,7 @@ const DietHistory = ({ logs = [] }) => {
                                         <span className="text-amber-100 text-sm sm:text-base font-bold mb-1">kcal</span>
                                     </div>
                                     <p className="text-amber-100 text-[10px] sm:text-xs mt-1 font-medium">
-                                        Based on {activeData.filter(d => d.calories > 0).length} logged days
+                                        Based on {daysWithData.length} logged days
                                     </p>
                                 </div>
                             </div>
@@ -218,7 +267,7 @@ const DietHistory = ({ logs = [] }) => {
                         {/* Legend - Full width */}
                         <div className="w-full mt-4 sm:mt-5 md:mt-6 flex flex-wrap gap-2 sm:gap-3 md:gap-4 justify-start p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200">
                             <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-md bg-gradient-to-br from-amber-500 to-amber-600 shadow-md"></div>
+                                <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-md bg-gradient-to-br from-green-500 to-green-600 shadow-md"></div>
                                 <div>
                                     <span className="text-xs sm:text-sm font-bold text-slate-800">Optimal</span>
                                     <span className="hidden sm:inline text-xs text-slate-500 ml-1">(1200-2400 kcal)</span>
@@ -249,19 +298,19 @@ const DietHistory = ({ logs = [] }) => {
                             <div className="bg-amber-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-amber-200">
                                 <p className="text-[10px] sm:text-xs text-amber-600 font-bold uppercase mb-1">Logged</p>
                                 <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-800">
-                                    {activeData.filter(d => d.calories > 0).length}
+                                    {daysWithData.length}
                                 </p>
                             </div>
                             <div className="bg-amber-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-amber-200">
                                 <p className="text-[10px] sm:text-xs text-amber-600 font-bold uppercase mb-1">Highest</p>
                                 <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-800">
-                                    {Math.max(...activeData.map(d => d.calories)).toLocaleString()}
+                                    {daysWithData.length > 0 ? Math.max(...daysWithData.map(d => d.calories)).toLocaleString() : '---'}
                                 </p>
                             </div>
                             <div className="bg-amber-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-amber-200">
                                 <p className="text-[10px] sm:text-xs text-amber-600 font-bold uppercase mb-1">Lowest</p>
                                 <p className="text-lg sm:text-xl md:text-2xl font-black text-slate-800">
-                                    {Math.min(...activeData.filter(d => d.calories > 0).map(d => d.calories)).toLocaleString()}
+                                    {daysWithData.length > 0 ? Math.min(...daysWithData.map(d => d.calories)).toLocaleString() : '---'}
                                 </p>
                             </div>
                         </div>

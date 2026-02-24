@@ -1,25 +1,38 @@
 /* eslint-disable react-hooks/purity */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { X, Info, Plus, FileDown, ChevronRight, BookOpen, Utensils } from 'lucide-react';
+import { X, Info, Plus, FileDown, ChevronRight, BookOpen, Utensils, Crown } from 'lucide-react';
+import { generateNutritionReport } from '@/services/pdfService';
+import { SubscriptionTier } from '../../../constants/subscriptionTier';
+import { useAuth } from '../../../auth/authtoken';
 
-// Dummy data types (replacing imports)
-const SubscriptionTier = {
-  FREE: 'free',
-  PREMIUM: 'premium'
-};
-
-// Mock PDF service
-const generateNutritionReport = (user, anthroData, logs) => {
-  console.log('Generating report for:', { user, anthroData, logs });
-  alert('PDF report generated successfully! Check your downloads folder.');
-};
-
-const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs, onNavigate, allUsers: propAllUsers, loadAllUsers, logout }) => {
+const Dashboard = ({ 
+  user: propUser, 
+  anthroData: propAnthroData, 
+  logs: propLogs, 
+  onNavigate, 
+  allUsers: propAllUsers, 
+  loadAllUsers, 
+  logout 
+}) => {
+  const { token, apiBaseURL } = useAuth();
+  
   const [status, setStatus] = useState('idle');
   const [showBMRInfo, setShowBMRInfo] = useState(false);
+  const [anthroData, setAnthroData] = useState(propAnthroData || null);
+  const [logs, setLogs] = useState(propLogs || []);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data if props are not provided
+  // Local tier state (syncs with parent + profile API)
+  const [userTier, setUserTier] = useState(propUser?.tier || SubscriptionTier.PREMIUM);
+
+  // Sync with parent props when upgraded
+  useEffect(() => {
+    if (propUser?.tier) {
+      setUserTier(propUser.tier);
+    }
+  }, [propUser?.tier]);
+
   const user = propUser || {
     id: '1',
     name: 'John Doe',
@@ -28,61 +41,103 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
     joinDate: new Date().toISOString()
   };
 
-  const anthroData = propAnthroData || {
-    weightKg: 72.5,
-    heightCm: 175,
-    age: 28,
-    sex: 'male',
-    waistCircumference: 82,
-    lastUpdated: new Date().toISOString()
+  const allUsers = propAllUsers || [];
+
+  // Modern subscription badge config
+  const tierConfig = {
+    [SubscriptionTier.FREE]: {
+      label: 'FREE',
+      className: 'bg-white/90 text-slate-700 border border-white/60 shadow-sm'
+    },
+    [SubscriptionTier.PRO_LITE]: {
+      label: 'PRO LITE',
+      className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md border border-amber-400/50'
+    },
+    [SubscriptionTier.PREMIUM]: {
+      label: 'PREMIUM',
+      className: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-emerald-400/50'
+    }
   };
 
-  const logs = propLogs || [
-    {
-      id: '1',
-      foodName: 'Grilled Chicken Salad',
-      mealType: 'Lunch',
-      grams: 350,
-      nutrients: { calories: 450, protein: 35, carbs: 12, fat: 28 },
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: '2',
-      foodName: 'Oatmeal with Berries',
-      mealType: 'Breakfast',
-      grams: 280,
-      nutrients: { calories: 320, protein: 12, carbs: 45, fat: 8 },
-      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: '3',
-      foodName: 'Salmon with Quinoa',
-      mealType: 'Dinner',
-      grams: 400,
-      nutrients: { calories: 580, protein: 42, carbs: 35, fat: 25 },
-      timestamp: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: '4',
-      foodName: 'Greek Yogurt',
-      mealType: 'Snack',
-      grams: 200,
-      nutrients: { calories: 180, protein: 18, carbs: 8, fat: 9 },
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    }
-  ];
-
-  const allUsers = propAllUsers || [
-    { id: '1', name: 'John Doe', email: 'john@example.com', tier: 'premium' },
-    { id: '2', name: 'Jane Smith', email: 'jane@example.com', tier: 'free' },
-    { id: '3', name: 'Mike Johnson', email: 'mike@example.com', tier: 'premium' }
-  ];
+  const currentTierConfig = tierConfig[userTier] || tierConfig[SubscriptionTier.FREE];
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBaseURL}/profile/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          setAnthroData({
+            weightKg: data.weight_kg || 70,
+            heightCm: data.height_cm || 175,
+            age: data.age || 28,
+            sex: data.sex || 'male',
+            waistCircumference: data.waist_cm || 82,
+            lastUpdated: new Date().toISOString()
+          });
+
+          const fetchedTier = data.tier || data.subscription_tier || data.subscriptionTier;
+          if (fetchedTier) {
+            setUserTier(fetchedTier);
+          }
+        } else if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchLogs = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch(`${apiBaseURL}/food-logs/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) throw new Error(`Failed to fetch logs: ${res.status}`);
+
+        const rawData = await res.json();
+        const data = Array.isArray(rawData) ? rawData : (rawData.results || []);
+
+        const normalized = data.map(log => ({
+          ...log,
+          id: log.id,
+          foodName: log.food_name || log.foodName,
+          mealType: log.meal_type || log.mealType,
+          grams: log.grams,
+          nutrients: log.nutrients,
+          date: log.date || new Date().toISOString()
+        }));
+
+        setLogs(normalized);
+      } catch (err) {
+        console.error('Fetch logs error:', err);
+      }
+    };
+
+    fetchProfile();
+    fetchLogs();
+
     if (loadAllUsers) {
       loadAllUsers().catch(console.error);
     }
-  }, [loadAllUsers]);
+  }, [token, apiBaseURL, loadAllUsers]);
 
   useEffect(() => {
     if (status === 'success' || status === 'error') {
@@ -149,7 +204,7 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
   };
 
   const handlePdfDownload = async () => {
-    if (user.tier !== SubscriptionTier.PREMIUM) {
+    if (userTier !== SubscriptionTier.PREMIUM) {
       if (onNavigate) onNavigate('settings');
       else alert('Upgrade to Premium to download reports');
       return;
@@ -168,17 +223,30 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
   };
 
   const handleNavigate = (view) => {
-    if (onNavigate) {
+    if (onNavigate && typeof onNavigate === 'function') {
       onNavigate(view);
     } else {
-      console.log('Navigate to:', view);
+      const routes = {
+        dietlog: '/diet-log#/user/DietLog',
+        plan:'/#/user/userPlan'
+      };
+      const path = routes[view] || '/';
+      window.location.href = path;
     }
   };
 
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full px-6 py-8 space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Welcome & Global Status */}
-      <section className="flex flex-col md:flex-row md:items-end bg-amber-600 p-6 rounded-xl justify-between gap-4 transition-all duration-500 hover:translate-y-[-2px]">
+      {/* Welcome & Global Status - MODERN HEADER WITH SUBSCRIPTION BADGE */}
+      <section className="flex flex-col md:flex-row md:items-end bg-amber-600 p-6 rounded-3xl justify-between gap-6 transition-all duration-500 hover:translate-y-[-2px] shadow-xl">
         <div className="transition-all duration-500">
           <h2 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tight transition-all duration-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-emerald-600 hover:to-teal-500">
             Karibu Tena,{' '}
@@ -186,23 +254,33 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
               {user.name.split(' ')[0]}
             </span>
           </h2>
-          <p className="text-slate-500 font-medium text-sm text-white lg:text-base mt-1 transition-colors duration-300 hover:text-slate-600">
+          <p className="text-white/90 font-medium text-sm lg:text-base mt-1 transition-colors duration-300">
             Your premium dietary health monitoring center.
           </p>
         </div>
 
-        {logout && (
-          <button
-            onClick={logout}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
-          >
-            Sign Out
-          </button>
-        )}
+        {/* Right side - Modern Subscription Badge + Logout */}
+        <div className="flex items-center gap-3">
+          {/* Modern Subscription Badge */}
+          <div className={`px-5 py-2.5 rounded-3xl text-xs font-black uppercase tracking-[0.12em] flex items-center gap-2 transition-all duration-300 hover:scale-105 ${currentTierConfig.className}`}>
+            {userTier === SubscriptionTier.PREMIUM && <Crown className="w-4 h-4" />}
+            {currentTierConfig.label}
+          </div>
 
+          {logout && (
+            <button
+              onClick={logout}
+              className="px-5 py-2.5 text-sm font-medium text-white/90 hover:text-white border border-white/30 hover:border-white/50 rounded-3xl transition-all duration-300 hover:bg-white/10"
+            >
+              Sign Out
+            </button>
+          )}
+        </div>
+
+        {/* Status indicator (kept as-is) */}
         {status !== 'idle' && (
           <div
-            className={`px-4 py-2 rounded-xl shadow-xl backdrop-blur-md flex items-center gap-3 animate-pulse fixed top-20 right-4 lg:static z-[60] border border-white/20 transition-all duration-300 ${
+            className={`px-4 py-2 rounded-2xl shadow-xl backdrop-blur-md flex items-center gap-3 animate-pulse fixed top-20 right-4 lg:static z-[60] border border-white/20 transition-all duration-300 ${
               status === 'generating'
                 ? 'bg-indigo-600/90 text-white shadow-indigo-200/50'
                 : status === 'success'
@@ -221,7 +299,7 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
         )}
       </section>
 
-      {/* BMR Info Modal */}
+      {/* BMR Info Modal (unchanged) */}
       {showBMRInfo && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
@@ -265,7 +343,7 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
         </div>
       )}
 
-      {/* Main Grid */}
+      {/* Rest of the dashboard (unchanged from previous version) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8">
         {/* Metric Cards */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-8">
@@ -367,8 +445,8 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
           {/* Action Row */}
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-8">
             <button
-              onClick={() => handleNavigate('moduleD')}
-              className="group bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:shadow-[0_30px_50px_rgba(16,185,129,0.4)] hover:-translate-y-2 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden"
+              onClick={() => handleNavigate('dietlog')}
+              className="group bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:shadow-[0_30px_50px_rgba(16,185,129,0.4)] hover:-translate-y-2 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden cursor-pointer"
             >
               <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
               <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl group-hover:rotate-12 transition-all duration-500 shrink-0 shadow-inner group-hover:scale-110">
@@ -389,14 +467,14 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
               onClick={handlePdfDownload}
               disabled={status === 'generating'}
               className={`p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 min-h-[100px] lg:h-56 text-left border gap-4 relative overflow-hidden group ${
-                user.tier === SubscriptionTier.PREMIUM
+                userTier === SubscriptionTier.PREMIUM
                   ? 'bg-white/80 backdrop-blur-xl border-indigo-100 hover:border-indigo-300 text-indigo-900 hover:bg-white shadow-[0_20px_40px_rgba(99,102,241,0.1)] hover:shadow-[0_30px_50px_rgba(99,102,241,0.2)] hover:-translate-y-2'
                   : 'bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed opacity-80'
               }`}
             >
               <div
                 className={`p-3.5 rounded-2xl shrink-0 transition-all duration-300 group-hover:scale-110 ${
-                  user.tier === SubscriptionTier.PREMIUM
+                  userTier === SubscriptionTier.PREMIUM
                     ? 'bg-indigo-100 text-indigo-600'
                     : 'bg-slate-200 text-slate-400'
                 }`}
@@ -413,7 +491,7 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
                 </p>
                 <p
                   className={`text-[10px] font-bold uppercase tracking-widest mt-1 transition-colors duration-300 ${
-                    user.tier === SubscriptionTier.PREMIUM
+                    userTier === SubscriptionTier.PREMIUM
                       ? 'text-indigo-400 group-hover:text-indigo-600'
                       : 'text-slate-400'
                   }`}
@@ -433,7 +511,7 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
               Recent Activity
             </h3>
             <button
-              onClick={() => handleNavigate('history')}
+              onClick={() => handleNavigate('dietlog')}
               className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 underline decoration-2 underline-offset-2 transition-all duration-300 hover:scale-110"
             >
               VIEW FULL HISTORY
@@ -486,7 +564,7 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
                   Diary is empty
                 </p>
                 <button
-                  onClick={() => handleNavigate('moduleD')}
+                  onClick={() => handleNavigate('DietLog')}
                   className="mt-4 text-emerald-600 text-xs font-bold hover:underline transition-all duration-300 hover:text-emerald-700 hover:scale-105"
                 >
                   Start Logging
@@ -495,10 +573,10 @@ const Dashboard = ({ user: propUser, anthroData: propAnthroData, logs: propLogs,
             )}
           </div>
 
-          {user.tier === SubscriptionTier.FREE && (
+          {userTier === SubscriptionTier.FREE && (
             <div className="p-6 bg-slate-50/50 backdrop-blur-sm transition-all duration-300 hover:bg-slate-100/50">
               <button
-                onClick={() => handleNavigate('settings')}
+                onClick={() => handleNavigate('plan')}
                 className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white text-[10px] font-black py-4 rounded-2xl tracking-[0.2em] uppercase hover:from-slate-800 hover:to-slate-700 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 hover:scale-105"
               >
                 Upgrade to Pro Lite

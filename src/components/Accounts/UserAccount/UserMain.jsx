@@ -8,6 +8,7 @@ import DietHistory from "./DieryHistory";
 import Frequency from "./Frequency";
 import MealPlan from "./MealPlan";
 import Logout from "../../Authentication/Logout";
+import Plan from "./Subscription";
 
 
 const UserMain = () => {
@@ -34,7 +35,8 @@ const UserMain = () => {
                     <Route path="/DiaryHistory" element={<DietHistory/>}/>
                     <Route path="/Frequency" element={<Frequency/>}/>
                     <Route path="/meal_Plan" element={<MealPlan/>}/>
-
+                    <Route path="/userPlan" element={<Plan/>}/>
+                    
                     <Route path="*" element={<Logout/>}/>
                 </Routes>
             </div>
