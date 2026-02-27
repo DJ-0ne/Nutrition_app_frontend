@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/useAuth';
 
 const SubscriptionTier = {
   FREE: 'FREE',
-  PRO_LITE: 'PRO_LITE',
+  PRO_LITE: 'PRO LITE',
   PREMIUM: 'PREMIUM',
 };
 

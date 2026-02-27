@@ -1,6 +1,8 @@
-// Login.jsx
+// =============================================
+// FULL UPDATED Login.jsx
+// =============================================
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , Link} from "react-router-dom";
 import { useAuthContext } from "./AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -16,8 +18,14 @@ const Login = () => {
   const { user, login, error: authError } = useAuthContext();
   const navigate = useNavigate();
 
-  // Smart redirect based on user role (superuser/admin vs normal user)
-  // Smart redirect based on user role (UPDATED - matches everything)
+  // Google Sign-In
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+  const handleGoogleSignIn = () => {
+    window.location.href = `${API_BASE_URL}/api/auth/google/login/`;
+  };
+
+  // Smart redirect based on user role
   useEffect(() => {
     if (user) {
       if (
@@ -25,7 +33,7 @@ const Login = () => {
         user.is_staff === true ||
         user.is_superuser === true
       ) {
-        navigate("/admin/dashboard"); // ← this is the correct one
+        navigate("/admin/dashboard");
       } else {
         navigate("/user/Home");
       }
@@ -48,24 +56,18 @@ const Login = () => {
       setIsLoading(false);
       return;
     }
-    // Redirect is handled automatically by the useEffect above
   };
 
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Side - Branding/Info with Image */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Background Image */}
         <img
           src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2353&q=80"
           alt="Fresh healthy ingredients"
           className="absolute inset-0 w-full h-full object-cover"
         />
-
-        {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-amber-900/90 via-amber-800/85 to-amber-900/90"></div>
-
-        {/* Decorative Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div
             className="absolute top-0 left-0 w-full h-full"
@@ -76,8 +78,6 @@ const Login = () => {
             }}
           ></div>
         </div>
-
-        {/* Curved border effect */}
         <div
           className="absolute right-0 top-0 h-full w-32 bg-white"
           style={{
@@ -87,7 +87,6 @@ const Login = () => {
         ></div>
 
         <div className="relative z-10 flex flex-col items-center justify-center text-white p-12 w-full">
-          {/* Logo and App Name */}
           <div className="mb-10 text-center">
             <h1 className="text-5xl font-black mb-3 tracking-tight">
               {appName}
@@ -97,7 +96,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Value Propositions */}
           <div className="space-y-4 w-full max-w-md">
             <div className="flex items-center space-x-4 bg-white/20 p-4 rounded-2xl backdrop-blur-md border border-white/30 transform hover:scale-105 transition-all duration-300">
               <div className="bg-amber-500 text-white p-2 rounded-xl">
@@ -168,7 +166,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="mt-10 flex gap-8 text-center">
             <div>
               <div className="text-3xl font-bold">50K+</div>
@@ -181,7 +178,6 @@ const Login = () => {
             </div>
           </div>
 
-          {/* Floating Card */}
           <div className="absolute bottom-10 left-10 bg-white/20 backdrop-blur-md p-3 rounded-xl border border-white/30 animate-float-slow">
             <div className="flex items-center gap-2">
               <span className="text-2xl">🥗</span>
@@ -198,7 +194,7 @@ const Login = () => {
           <div className="lg:hidden text-center mb-8">
             <div className="mx-auto h-20 w-20 rounded-2xl bg-amber-500 flex items-center justify-center mb-4 shadow-lg overflow-hidden">
               <img
-                src="/logo.jpeg"
+                src="/abcdelogo.jpg"
                 alt="ABCDE Nutrition"
                 className="w-full h-full object-cover"
               />
@@ -313,19 +309,19 @@ const Login = () => {
                     className="absolute flex right-2 top-3.5 cursor-pointer text-amber-500"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20}/>}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="text-sm font-medium text-amber-600 hover:text-amber-500"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <button
@@ -362,6 +358,33 @@ const Login = () => {
               )}
             </button>
           </form>
+
+          {/* Google Sign-In */}
+          <div className="my-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-amber-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gradient-to-br from-amber-50 to-white text-amber-600">
+                  or continue with
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="w-full flex items-center cursor-pointer justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 py-3.5 rounded-xl transition-all duration-200 font-medium text-gray-700 shadow-sm"
+          >
+            <img
+              src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_18dp.png"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            Sign in with Google
+          </button>
 
           {/* Sign Up Link */}
           <div className="text-center mt-8">

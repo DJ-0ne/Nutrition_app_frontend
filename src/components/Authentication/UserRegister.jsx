@@ -1,5 +1,6 @@
-/* eslint-disable no-unused-vars */
-// Register.jsx
+// =============================================
+// FULL UPDATED Register.jsx
+// =============================================
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, User, Phone, AtSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -60,66 +61,66 @@ const Register = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
+    e.preventDefault();
+    setIsLoading(true);
 
-  try {
-    const requestData = {
-      username: username.toLowerCase().trim(),
-      email: email.toLowerCase().trim(),
-      first_name: firstName.trim(),
-      last_name: lastName.trim(),
-      phone: phone.trim(),
-      password: password,
-      password2: confirmPassword,
-    };
+    try {
+      const requestData = {
+        username: username.toLowerCase().trim(),
+        email: email.toLowerCase().trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        phone: phone.trim(),
+        password: password,
+        password2: confirmPassword,
+      };
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/register/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(requestData),
-    });
+      const response = await fetch(`${API_BASE_URL}/api/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      // FIXED: Show ALL backend errors clearly
-      if (data && typeof data === 'object') {
-        // Show first error prominently
-        const firstError = Object.values(data)[0];
-        if (Array.isArray(firstError)) {
-          toast.error(firstError[0]);
+      if (!response.ok) {
+        if (data && typeof data === 'object') {
+          const firstError = Object.values(data)[0];
+          if (Array.isArray(firstError)) {
+            toast.error(firstError[0]);
+          } else {
+            toast.error(firstError);
+          }
         } else {
-          toast.error(firstError);
+          toast.error('Registration failed. Please try again.');
         }
-      } else {
-        toast.error('Registration failed. Please try again.');
+        setIsLoading(false);
+        return;
       }
+
+      toast.success('Account created successfully!');
+      
+      if (data.access) {
+        localStorage.setItem('access_token', data.access);
+        if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      navigate('/Login');
+
+    } catch (error) {
+      toast.error('Network error. Please check your connection.');
+    } finally {
       setIsLoading(false);
-      return;
     }
+  };
 
-    // Success
-    toast.success('Account created successfully!');
-    
-    // Store tokens & navigate
-    if (data.access) {
-      localStorage.setItem('access_token', data.access);
-      if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
-    }
-    navigate('/Login');
-
-  } catch (error) {
-    toast.error('Network error. Please check your connection.');
-  } finally {
-    setIsLoading(false);  // Always reset loading
-  }
-};
-
+  // Google Sign-Up
+  const handleGoogleSignUp = () => {
+    window.location.href = `${API_BASE_URL}/api/auth/google/signup/`;
+  };
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -149,7 +150,6 @@ const Register = () => {
         
         <div className="relative z-10 flex flex-col items-center justify-center text-white p-12 w-full">
           <div className="mb-10 text-center">
-            
             <h1 className="text-5xl font-black mb-3 tracking-tight">ABCDE Nutrition</h1>
             <p className="text-xl font-light text-amber-100">Start Your Journey Today</p>
           </div>
@@ -204,9 +204,9 @@ const Register = () => {
         <div className="max-w-md w-full">
           {/* Mobile Header */}
           <div className="lg:hidden text-center mb-8">
-            <div className="mx-auto h-20 w-20 rounded-2xl bg-amber-500 flex items-center justify-center mb-4 shadow-lg overflow-hidden">
+            <div className="mx-auto h-20 w-20 rounded-2xl flex items-center justify-center mb-4 shadow-lg overflow-hidden">
               <img 
-                src="/logo.jpeg" 
+                src="/abcdelogo.jpg" 
                 alt="ABCDE Nutrition" 
                 className="w-full h-full object-cover"
               />
@@ -451,6 +451,33 @@ const Register = () => {
               )}
             </button>
           </form>
+
+          {/* Google Sign-Up */}
+          <div className="my-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-amber-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gradient-to-br from-amber-50 to-white text-amber-600">
+                  or sign up with
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignUp}
+            className="w-full flex items-center justify-center gap-3 cursor-pointer border border-gray-300 bg-white hover:bg-gray-50 py-3.5 rounded-xl transition-all duration-200 font-medium text-gray-700 shadow-sm"
+          >
+            <img
+              src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_18dp.png"
+              alt="Google"
+              className="w-5 h-5"
+            />
+            Sign up with Google
+          </button>
 
           {/* Terms and Login Link */}
           <div className="mt-6 text-center space-y-3">

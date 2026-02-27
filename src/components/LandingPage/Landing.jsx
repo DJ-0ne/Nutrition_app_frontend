@@ -398,7 +398,7 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <img 
-                src='/Geraldine.png'
+                src='/client.jpeg'
                 alt="Geraldine Kaari, Founder of ABCDE Nutrition"
                 className="w-72 h-72 object-cover rounded-2xl shadow-xl"
               />

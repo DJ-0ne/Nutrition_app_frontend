@@ -10,11 +10,11 @@ const Logout = () => {
   useEffect(() => {
     const handleLogout = async () => {
       await logout();
-      navigate('/Login', { replace: true });
+      // No need for navigate here; logout() already does it
     };
 
     handleLogout();
-  }, [logout, navigate]);
+  }, [logout]);
 
   return (
     <Box 

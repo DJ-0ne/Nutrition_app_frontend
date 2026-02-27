@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/purity */
-/* eslint-disable no-unused-vars */
+
 import React, { useState, useEffect } from 'react';
 import { X, Info, Plus, FileDown, ChevronRight, BookOpen, Utensils, Crown } from 'lucide-react';
 import { generateNutritionReport } from '@/services/pdfService';
@@ -23,43 +22,54 @@ const Dashboard = ({
   const [logs, setLogs] = useState(propLogs || []);
   const [loading, setLoading] = useState(true);
 
-  // Local tier state (syncs with parent + profile API)
-  const [userTier, setUserTier] = useState(propUser?.tier || SubscriptionTier.PREMIUM);
+  const [user, setUser] = useState(null);
+  const [userTier, setUserTier] = useState(SubscriptionTier.FREE);
 
-  // Sync with parent props when upgraded
-  useEffect(() => {
-    if (propUser?.tier) {
-      setUserTier(propUser.tier);
-    }
-  }, [propUser?.tier]);
-
-  const user = propUser || {
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    tier: SubscriptionTier.PREMIUM,
-    joinDate: new Date().toISOString()
-  };
-
-  const allUsers = propAllUsers || [];
-
-  // Modern subscription badge config
   const tierConfig = {
-    [SubscriptionTier.FREE]: {
-      label: 'FREE',
-      className: 'bg-white/90 text-slate-700 border border-white/60 shadow-sm'
-    },
-    [SubscriptionTier.PRO_LITE]: {
-      label: 'PRO LITE',
-      className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md border border-amber-400/50'
-    },
-    [SubscriptionTier.PREMIUM]: {
-      label: 'PREMIUM',
-      className: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-emerald-400/50'
+    [SubscriptionTier.FREE]: { label: 'FREE', className: 'bg-white/90 text-slate-700 border border-white/60 shadow-sm' },
+    [SubscriptionTier.PRO_LITE]: { label: 'PRO LITE', className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md border border-amber-400/50' },
+    [SubscriptionTier.PREMIUM]: { label: 'PREMIUM', className: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-emerald-400/50' }
+  };
+  const currentTierConfig = tierConfig[userTier] || tierConfig[SubscriptionTier.FREE];
+
+  const fetchCurrentUser = async () => {
+    if (!token) return;
+    try {
+      const response = await fetch(`${apiBaseURL}/auth/validate-token/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.valid && data.user) {
+          const u = data.user;
+          const displayName = u.name || 
+                             (u.first_name && u.last_name ? `${u.first_name} ${u.last_name}`.trim() : '') ||
+                             u.username ||
+                             'User';
+
+          setUser({
+            id: u.id,
+            name: displayName,
+            email: u.email,
+            tier: u.tier || u.subscription_tier || u.subscriptionTier || SubscriptionTier.FREE,
+            joinDate: u.date_joined || u.created_at || new Date().toISOString()
+          });
+
+          const fetchedTier = u.tier || u.subscription_tier || u.subscriptionTier;
+          if (fetchedTier) setUserTier(fetchedTier);
+        }
+      } else if (response.status === 401) {
+        localStorage.removeItem('access_token');
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
     }
   };
-
-  const currentTierConfig = tierConfig[userTier] || tierConfig[SubscriptionTier.FREE];
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -133,6 +143,7 @@ const Dashboard = ({
 
     fetchProfile();
     fetchLogs();
+    fetchCurrentUser();
 
     if (loadAllUsers) {
       loadAllUsers().catch(console.error);
@@ -228,6 +239,7 @@ const Dashboard = ({
     } else {
       const routes = {
         dietlog: '/diet-log#/user/DietLog',
+        Anthro:'/#/user/UserProfile',
         plan:'/#/user/userPlan'
       };
       const path = routes[view] || '/';
@@ -245,13 +257,12 @@ const Dashboard = ({
 
   return (
     <div className="w-full px-6 py-8 space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Welcome & Global Status - MODERN HEADER WITH SUBSCRIPTION BADGE */}
       <section className="flex flex-col md:flex-row md:items-end bg-amber-600 p-6 rounded-3xl justify-between gap-6 transition-all duration-500 hover:translate-y-[-2px] shadow-xl">
         <div className="transition-all duration-500">
           <h2 className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tight transition-all duration-300 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-emerald-600 hover:to-teal-500">
             Karibu Tena,{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500">
-              {user.name.split(' ')[0]}
+              {user?.name?.split(' ')[0] || propUser?.name?.split(' ')[0] || 'User'}
             </span>
           </h2>
           <p className="text-white/90 font-medium text-sm lg:text-base mt-1 transition-colors duration-300">
@@ -259,9 +270,7 @@ const Dashboard = ({
           </p>
         </div>
 
-        {/* Right side - Modern Subscription Badge + Logout */}
         <div className="flex items-center gap-3">
-          {/* Modern Subscription Badge */}
           <div className={`px-5 py-2.5 rounded-3xl text-xs font-black uppercase tracking-[0.12em] flex items-center gap-2 transition-all duration-300 hover:scale-105 ${currentTierConfig.className}`}>
             {userTier === SubscriptionTier.PREMIUM && <Crown className="w-4 h-4" />}
             {currentTierConfig.label}
@@ -277,7 +286,6 @@ const Dashboard = ({
           )}
         </div>
 
-        {/* Status indicator (kept as-is) */}
         {status !== 'idle' && (
           <div
             className={`px-4 py-2 rounded-2xl shadow-xl backdrop-blur-md flex items-center gap-3 animate-pulse fixed top-20 right-4 lg:static z-[60] border border-white/20 transition-all duration-300 ${
@@ -299,7 +307,6 @@ const Dashboard = ({
         )}
       </section>
 
-      {/* BMR Info Modal (unchanged) */}
       {showBMRInfo && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
@@ -343,11 +350,8 @@ const Dashboard = ({
         </div>
       )}
 
-      {/* Rest of the dashboard (unchanged from previous version) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8">
-        {/* Metric Cards */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-8">
-          {/* BMI Card */}
           <div className="bg-white/70 backdrop-blur-xl p-6 lg:p-8 rounded-[2rem] shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-amber-500/50 relative overflow-hidden group hover:shadow-[0_30px_60px_rgba(16,185,129,0.1)] transition-all duration-500 transform hover:-translate-y-2 hover:border-emerald-200/50">
             <div
               className="absolute top-0 right-0 w-32 h-32 rounded-bl-[4rem] opacity-60 transition-all duration-500 group-hover:scale-125"
@@ -379,7 +383,7 @@ const Dashboard = ({
             ) : (
               <div className="mt-6 relative z-10 transition-all duration-300">
                 <button
-                  onClick={() => handleNavigate('moduleA')}
+                  onClick={() => handleNavigate('Anthro')}
                   className="w-full lg:w-auto bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-8 py-3 rounded-xl text-xs font-black shadow-lg shadow-emerald-200 hover:shadow-emerald-400 hover:scale-105 transition-all duration-300 hover:-translate-y-0.5"
                 >
                   COMPLETE PROFILE
@@ -388,7 +392,6 @@ const Dashboard = ({
             )}
           </div>
 
-          {/* Caloric Intake Card */}
           <div className="bg-white/70 backdrop-blur-xl p-6 lg:p-8 rounded-[2rem] shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-green/50 relative overflow-hidden group hover:shadow-[0_30px_60px_rgba(59,130,246,0.1)] transition-all duration-500 transform hover:-translate-y-2 hover:border-blue-200/50">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-blue-50 rounded-bl-[4rem] opacity-60 transition-all duration-500 group-hover:scale-125" />
             <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] relative z-10 transition-colors duration-300 group-hover:text-slate-600">
@@ -409,7 +412,6 @@ const Dashboard = ({
             </div>
           </div>
 
-          {/* BMR Card */}
           <div className="bg-white/70 backdrop-blur-xl p-6 lg:p-8 rounded-[2rem] shadow-[0_20px_40px_rgba(0,0,0,0.04)] border border-red/50 relative overflow-hidden group hover:shadow-[0_30px_60px_rgba(249,115,22,0.1)] transition-all duration-500 transform hover:-translate-y-2 hover:border-orange-200/50">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-orange-50 rounded-bl-[4rem] opacity-60 transition-all duration-500 group-hover:scale-125" />
             <div className="flex justify-between items-start relative z-10">
@@ -442,7 +444,6 @@ const Dashboard = ({
             </div>
           </div>
 
-          {/* Action Row */}
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-8">
             <button
               onClick={() => handleNavigate('dietlog')}
@@ -504,7 +505,6 @@ const Dashboard = ({
           </div>
         </div>
 
-        {/* Recent Activity / History Section */}
         <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/50 shadow-[0_20px_40px_rgba(0,0,0,0.04)] flex flex-col h-full overflow-hidden hover:shadow-[0_30px_60px_rgba(0,0,0,0.08)] hover:border-emerald-200/50 transition-all duration-500 hover:-translate-y-1">
           <div className="p-6 border-b border-slate-100/50 flex justify-between items-center bg-white/40 transition-all duration-300 group hover:bg-white/60">
             <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] transition-colors duration-300">

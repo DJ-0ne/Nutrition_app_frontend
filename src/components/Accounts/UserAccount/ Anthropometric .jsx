@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { 
@@ -39,14 +38,14 @@ const Anthropometric = ({ onSave = () => {} }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    height_cm: 170,
-    weight_kg: 70,
-    age: 25,
-    sex: 'male',
+    height_cm: null,
+    weight_kg: null,
+    age: null,
+    sex: '',
     waist_cm: null,
     medical_conditions: [],
     other_medical_condition: '',
-    activity_level: 1,
+    activity_level: null,
   });
 
   const [showManualInput, setShowManualInput] = useState(false);
@@ -73,14 +72,14 @@ const Anthropometric = ({ onSave = () => {} }) => {
         if (response.ok) {
           const data = await response.json();
           setFormData({
-            height_cm: data.height_cm || 170,
-            weight_kg: data.weight_kg || 70,
-            age: data.age || 25,
-            sex: data.sex || 'male',
-            waist_cm: data.waist_cm,
+            height_cm: data.height_cm || null,
+            weight_kg: data.weight_kg || null,
+            age: data.age || null,
+            sex: data.sex || '',
+            waist_cm: data.waist_cm || null,
             medical_conditions: data.medical_conditions || [],
             other_medical_condition: data.other_medical_condition || '',
-            activity_level: data.activity_level || 1,
+            activity_level: data.activity_level || null,
           });
           
           if (data.other_medical_condition) {
@@ -182,7 +181,7 @@ const Anthropometric = ({ onSave = () => {} }) => {
       return;
     }
 
-    if (!formData.height_cm || !formData.weight_kg || !formData.age || !formData.sex) {
+    if (!formData.height_cm || !formData.weight_kg || !formData.age || !formData.sex || formData.activity_level == null) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -235,6 +234,8 @@ const Anthropometric = ({ onSave = () => {} }) => {
   };
 
   const activityLabels = ['Sedentary', 'Light', 'Moderate', 'Active', 'Very Active', 'Athlete'];
+  const activityClass = formData.activity_level != null ? 'text-amber-600 bg-amber-50' : 'text-gray-500 bg-gray-50';
+  const activityLabel = formData.activity_level != null ? activityLabels[formData.activity_level] : 'Not set';
 
   if (loading) {
     return (
@@ -370,7 +371,7 @@ const Anthropometric = ({ onSave = () => {} }) => {
                 <div>
                   <p className="text-xs text-gray-500">Age/Sex</p>
                   <p className="text-lg sm:text-xl font-bold text-gray-800">
-                    {formData.age || '—'} / {formData.sex === 'male' ? 'M' : 'F'}
+                    {formData.age || '—'} / {formData.sex ? formData.sex.charAt(0).toUpperCase() : '—'}
                   </p>
                 </div>
               </div>
@@ -414,10 +415,10 @@ const Anthropometric = ({ onSave = () => {} }) => {
                       </label>
                       <input
                         type="number"
-                        value={formData.height_cm || ''}
-                        onChange={e => setFormData({ ...formData, height_cm: Number(e.target.value) })}
+                        value={formData.height_cm ?? ''}
+                        onChange={e => setFormData({ ...formData, height_cm: Number(e.target.value) || null })}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/20 transition-all outline-none"
-                        placeholder="170"
+                        placeholder="e.g. 170"
                         required
                       />
                     </div>
@@ -430,10 +431,10 @@ const Anthropometric = ({ onSave = () => {} }) => {
                       </label>
                       <input
                         type="number"
-                        value={formData.weight_kg || ''}
-                        onChange={e => setFormData({ ...formData, weight_kg: Number(e.target.value) })}
+                        value={formData.weight_kg ?? ''}
+                        onChange={e => setFormData({ ...formData, weight_kg: Number(e.target.value) || null })}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/20 transition-all outline-none"
-                        placeholder="70"
+                        placeholder="e.g. 70"
                         required
                       />
                     </div>
@@ -446,10 +447,10 @@ const Anthropometric = ({ onSave = () => {} }) => {
                       </label>
                       <input
                         type="number"
-                        value={formData.waist_cm || ''}
-                        onChange={e => setFormData({ ...formData, waist_cm: e.target.value ? Number(e.target.value) : null })}
+                        value={formData.waist_cm ?? ''}
+                        onChange={e => setFormData({ ...formData, waist_cm: Number(e.target.value) || null })}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/20 transition-all outline-none"
-                        placeholder="Optional"
+                        placeholder="e.g. 85 (optional)"
                       />
                     </div>
 
@@ -461,10 +462,10 @@ const Anthropometric = ({ onSave = () => {} }) => {
                       </label>
                       <input
                         type="number"
-                        value={formData.age || ''}
-                        onChange={e => setFormData({ ...formData, age: Number(e.target.value) })}
+                        value={formData.age ?? ''}
+                        onChange={e => setFormData({ ...formData, age: Number(e.target.value) || null })}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-500/20 transition-all outline-none"
-                        placeholder="25"
+                        placeholder="e.g. 25"
                         required
                       />
                     </div>
@@ -508,8 +509,8 @@ const Anthropometric = ({ onSave = () => {} }) => {
                           <Flame className="w-4 h-4 text-amber-500" />
                           Activity Level
                         </label>
-                        <span className="text-sm font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
-                          {activityLabels[formData.activity_level || 1]}
+                        <span className={`text-sm font-bold ${activityClass} px-3 py-1 rounded-full`}>
+                          {activityLabel}
                         </span>
                       </div>
                       <input

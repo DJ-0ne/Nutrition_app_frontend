@@ -136,7 +136,7 @@ function UserSidebar() {
               <div className="relative group">
                 <div className="bg-amber-400 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <img 
-                  src="/abcdelogo.jpeg" 
+                  src="/abcdelogo.jpg" 
                   alt="Logo" 
                   className={`
                     relative rounded-xl object-cover border-2 border-white/40 shadow-2xl
