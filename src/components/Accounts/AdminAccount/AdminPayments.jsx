@@ -161,7 +161,7 @@ const AdminPayments = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white p-6 font-sans">
       <div className="max-w-7xl mx-auto space-y-10">
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl font-black tracking-tight text-slate-900">Payment Management</h1>
             <p className="text-slate-500 mt-1">Manage tiers, pricing &amp; user subscriptions</p>
@@ -173,7 +173,7 @@ const AdminPayments = () => {
 
         {/* ==================== PRICING EDITOR (Backend Powered) ==================== */}
         <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-xl border border-white/60 p-8">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
               <h2 className="text-2xl font-bold text-slate-800">Subscription Pricing</h2>
               <p className="text-sm text-slate-500">Changes are saved permanently in the database</p>
@@ -232,8 +232,8 @@ const AdminPayments = () => {
             {loading ? (
               <div className="p-12 text-center text-slate-500">Loading clients...</div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-slate-50">
+              <table className="min-w-full divide-y divide-slate-100">
+                <thead className="bg-slate-50 hidden md:table-header-group">
                   <tr>
                     <th className="text-left px-8 py-5 font-medium text-slate-500">User</th>
                     <th className="text-left px-8 py-5 font-medium text-slate-500">Email</th>
@@ -241,15 +241,15 @@ const AdminPayments = () => {
                     <th className="text-left px-8 py-5 font-medium text-slate-500 w-64">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 block md:table-row-group">
                   {users.map((user) => {
                     const userId = user.id.toString();
                     const currentTier = user.tier || SubscriptionTier.FREE;
                     const isEditing = editingUserId === userId;
 
                     return (
-                      <tr key={userId} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="px-8 py-6">
+                      <tr key={userId} className="hover:bg-slate-50/70 transition block md:table-row border-b md:border-none p-4 md:p-0">
+                        <td className="px-8 py-6 block md:table-cell before:content-['User:'] before:font-medium before:text-slate-500 before:mr-2 md:before:hidden">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white font-bold">
                               {user.username?.[0]?.toUpperCase() || 'U'}
@@ -259,15 +259,15 @@ const AdminPayments = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-8 py-6 text-slate-600 font-mono text-sm">{user.email}</td>
-                        <td className="px-8 py-6">
+                        <td className="px-8 py-6 text-slate-600 font-mono text-sm block md:table-cell before:content-['Email:'] before:font-medium before:text-slate-500 before:mr-2 md:before:hidden">{user.email}</td>
+                        <td className="px-8 py-6 block md:table-cell before:content-['Current_Tier:'] before:font-medium before:text-slate-500 before:mr-2 md:before:hidden">
                           <span className={`inline-block px-5 py-1.5 rounded-full text-sm font-bold tracking-wide capitalize ${getTierBadgeClass(currentTier)}`}>
                             {currentTier.replace('_', ' ')}
                           </span>
                         </td>
-                        <td className="px-8 py-6">
+                        <td className="px-8 py-6 block md:table-cell before:content-['Action:'] before:font-medium before:text-slate-500 before:mr-2 md:before:hidden">
                           {isEditing ? (
-                            <div className="flex gap-3">
+                            <div className="flex flex-col sm:flex-row gap-3">
                               <select 
                                 value={selectedTier ?? currentTier} 
                                 onChange={(e) => setSelectedTier(e.target.value)} 

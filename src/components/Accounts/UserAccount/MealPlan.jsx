@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import { Loader2 } from 'lucide-react';
 import { MEAL_TYPES } from '../../../constants/mealTypes';
 import { SubscriptionTier } from '../../../constants/subscriptionTier';
@@ -136,23 +136,23 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-amber-50/30 via-white to-amber-50/30">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 pb-20 lg:pb-10">
         <div className="w-full space-y-6 sm:space-y-8">
-          <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-xl border border-amber-200">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-              <div className="space-y-3">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-800">
+          <div className="w-full bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl border border-amber-200">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
+              <div className="space-y-2 lg:space-y-3">
+                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black text-slate-800">
                   7-Day 
                   <span className="block sm:inline sm:ml-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                     Meal Plan
                   </span>
                 </h1>
-                <p className="text-slate-600 text-base sm:text-lg max-w-3xl leading-relaxed font-medium">
+                <p className="text-slate-600 text-sm sm:text-base lg:text-lg max-w-3xl leading-relaxed font-medium">
                   Your personalized weekly nutrition schedule, designed to meet your dietary goals.
                 </p>
               </div>
 
-              <div className={`px-5 py-3 rounded-xl font-bold text-sm border-2 ${
+              <div className={`px-4 sm:px-5 py-2 sm:py-3 rounded-xl font-bold text-xs sm:text-sm border-2 ${
                 currentTier === SubscriptionTier.FREE 
                   ? 'bg-slate-100 text-slate-600 border-slate-300' 
                   : 'bg-amber-50 text-amber-700 border-amber-300'
@@ -167,7 +167,8 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
           </div>
 
           <div className="w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-amber-200 overflow-hidden">
-            <div className="w-full overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden sm:block w-full overflow-x-auto">
               <table className="w-full min-w-[1000px] border-separate border-spacing-0">
                 <thead>
                   <tr className="bg-amber-50">
@@ -206,6 +207,35 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
               </table>
             </div>
 
+            {/* Mobile Stacked Layout */}
+            <div className="sm:hidden divide-y divide-amber-100">
+              {days.map((day, dayIndex) => (
+                <div key={day} className="p-4">
+                  <h3 className="text-lg font-bold text-amber-800 mb-4 border-b border-amber-200 pb-2">
+                    {day}
+                  </h3>
+                  <div className="space-y-3">
+                    {MEAL_TYPES.map((meal, mealIndex) => (
+                      <div key={meal.value} className="bg-amber-50/50 rounded-lg p-3">
+                        <p className={`text-sm font-bold mb-1 ${
+                          mealIndex === 0 ? 'text-amber-600' : mealIndex === 2 ? 'text-orange-600' : mealIndex === 4 ? 'text-amber-700' : 'text-amber-500'
+                        }`}>
+                          {meal.label}
+                        </p>
+                        <p className="text-sm text-slate-700 font-medium">
+                          {mealPlan && mealPlan[day]?.[meal.value] ? (
+                            mealPlan[day][meal.value]
+                          ) : (
+                            <span className="text-slate-400 italic">No meal planned</span>
+                          )}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="border-t border-amber-200 bg-amber-50/50 p-4 flex flex-wrap gap-4 justify-start">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-amber-500"></div>
@@ -228,21 +258,12 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
 
           <div className="sticky bottom-4 z-40 bg-white shadow-2xl rounded-xl border-2 border-amber-200 p-4">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex gap-4 text-sm">
-                <div>
-                  <span className="text-slate-500">Total Meals:</span>
-                  <span className="ml-2 font-bold text-amber-600">42</span>
-                </div>
-                <div>
-                  <span className="text-slate-500">Days Planned:</span>
-                  <span className="ml-2 font-bold text-amber-600">7</span>
-                </div>
-              </div>
+              
 
               <button 
                 onClick={generateMealPlan}
                 disabled={loading || currentTier === SubscriptionTier.FREE}
-                className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-base transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2 min-w-[200px] ${
+                className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-base transition-all transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center gap-2 w-full sm:w-auto min-w-[200px] ${
                   currentTier === SubscriptionTier.FREE
                     ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200 hover:from-amber-600 hover:to-orange-600'
@@ -255,9 +276,6 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
                     <span>Generate New AI Plan</span>
                   </>
                 )}

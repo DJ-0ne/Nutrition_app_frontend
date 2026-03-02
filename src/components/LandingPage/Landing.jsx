@@ -120,14 +120,14 @@ const Landing = () => {
 
               {/* Description */}
               <p className="text-sm sm:text-base md:text-lg text-gray-600 mb-6 sm:mb-8 leading-relaxed">
-                Kenya's first nutrition app built on clinical assessment methodology. 
+                Kenya's first nutrition app built on the KFCT framework. 
                 Real Kenyan foods. Household portions you actually use. Assessment before advice.
               </p>
 
               {/* CTA Buttons - Stack on mobile */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <button
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/register')}
                   className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-amber-700 text-white rounded-xl hover:bg-amber-800 transition-all duration-300 font-medium shadow-lg shadow-amber-200 flex items-center justify-center group text-sm sm:text-base"
                 >
                   Get started
@@ -136,7 +136,7 @@ const Landing = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => navigate('/about')}
+                  onClick={() => navigate('/login')}
                   className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-transparent text-teal-600 border-2 border-teal-600 rounded-xl hover:bg-teal-50 transition-all duration-300 font-medium text-sm sm:text-base"
                 >
                   Learn More
@@ -287,7 +287,7 @@ const Landing = () => {
                 </svg>
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Clinical Assessment</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">BMI calculations with medically neutral interpretation ranges. Assessment before advice, always.</p>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">BMI calculations with neutral interpretation ranges.</p>
             </div>
 
             {/* Feature 3 */}
@@ -313,17 +313,6 @@ const Landing = () => {
             </div>
 
             {/* Feature 5 */}
-            <div className="group bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 sm:hover:-translate-y-2 border border-gray-100">
-              <div className="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 bg-teal-50 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6">
-                <svg className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Offline-First</h3>
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">Works without internet. Your data syncs automatically when you're back online. Built for real Kenyan connectivity.</p>
-            </div>
-
-            {/* Feature 6 */}
             <div className="group bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 sm:hover:-translate-y-2 border border-gray-100">
               <div className="w-12 sm:w-14 md:w-16 h-12 sm:h-14 md:h-16 bg-green-50 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6">
                 <svg className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

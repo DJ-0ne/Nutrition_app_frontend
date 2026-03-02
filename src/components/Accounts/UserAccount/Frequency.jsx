@@ -18,16 +18,14 @@ const FREQUENCY_OPTIONS = [
 const Frequency = () => {
   const { token, apiBaseURL } = useAuth();
 
-  // ✅ Local tier state (fetched from server + fallback)
   const [currentTier, setCurrentTier] = useState(SubscriptionTier.FREE);
-
   const [responses, setResponses] = useState({});
   const [cachedInsights, setCachedInsights] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
   const [loadingResponses, setLoadingResponses] = useState(true);
   const [loadingInsights, setLoadingInsights] = useState(false);
 
-  // Fetch real user tier from profile (same as Dashboard/MealPlan/Recall)
+  // Fetch real user tier from profile
   useEffect(() => {
     const fetchTier = async () => {
       if (!token) return;
@@ -97,7 +95,6 @@ const Frequency = () => {
       return;
     }
 
-    // FREE users cannot generate insights
     if (currentTier === SubscriptionTier.FREE) {
       toast.error("Upgrade to Pro Lite or Premium to generate AI insights");
       return;
@@ -272,7 +269,8 @@ const Frequency = () => {
                   </p>
                 </div>
 
-                <div className="w-full overflow-x-auto">
+                {/* ====================== DESKTOP / TABLET TABLE ====================== */}
+                <div className="hidden sm:block w-full overflow-x-auto">
                   <table className="w-full min-w-[1000px]">
                     <thead>
                       <tr className="bg-slate-50">
@@ -309,9 +307,7 @@ const Frequency = () => {
                                   name={item.id}
                                   value={opt.value}
                                   checked={responses[item.id] === opt.value}
-                                  onChange={() =>
-                                    handleOptionChange(item.id, opt.value)
-                                  }
+                                  onChange={() => handleOptionChange(item.id, opt.value)}
                                   className="hidden"
                                 />
                                 <div className={`
@@ -334,6 +330,54 @@ const Frequency = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* ====================== MOBILE STACKED LAYOUT ====================== */}
+                <div className="sm:hidden divide-y divide-slate-200 px-4">
+                  {section.items.map((item, index) => (
+                    <div key={item.id} className="py-6">
+                      <div className="flex items-start gap-2 mb-4">
+                        <span className="text-amber-500 font-bold text-lg mt-0.5">{index + 1}.</span>
+                        <div className="text-base font-semibold text-slate-800 leading-tight">
+                          {item.name}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        {FREQUENCY_OPTIONS.map((opt) => (
+                          <label
+                            key={opt.value}
+                            className="flex items-center gap-3 cursor-pointer bg-white border border-slate-200 hover:border-amber-300 rounded-xl p-3 transition-all active:scale-[0.985]"
+                          >
+                            <input
+                              type="radio"
+                              name={item.id}
+                              value={opt.value}
+                              checked={responses[item.id] === opt.value}
+                              onChange={() => handleOptionChange(item.id, opt.value)}
+                              className="hidden"
+                            />
+                            <div className={`
+                              w-6 h-6 rounded-full border-2 flex-shrink-0 transition-all
+                              ${responses[item.id] === opt.value 
+                                ? 'border-amber-500 bg-amber-500' 
+                                : 'border-slate-300'
+                              }
+                            `}>
+                              {responses[item.id] === opt.value && (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <div className="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-sm text-slate-700 font-medium leading-tight">
+                              {opt.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -372,7 +416,6 @@ const Frequency = () => {
                   "Upgrade to Generate Insights"
                 ) : (
                   <>
-                    <span>⚡</span>
                     Generate Insights
                   </>
                 )}

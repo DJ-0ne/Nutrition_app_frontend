@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Info, Plus, FileDown, ChevronRight, BookOpen, Utensils, Crown } from 'lucide-react';
 import { generateNutritionReport } from '@/services/pdfService';
@@ -31,6 +30,8 @@ const Dashboard = ({
     [SubscriptionTier.PREMIUM]: { label: 'PREMIUM', className: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-lg border border-emerald-400/50' }
   };
   const currentTierConfig = tierConfig[userTier] || tierConfig[SubscriptionTier.FREE];
+
+  const isPaidTier = userTier === SubscriptionTier.PRO_LITE || userTier === SubscriptionTier.PREMIUM;
 
   const fetchCurrentUser = async () => {
     if (!token) return;
@@ -114,7 +115,7 @@ const Dashboard = ({
     };
 
     const fetchLogs = async () => {
-      if (!token) return;
+      if (!token || !isPaidTier) return;
       try {
         const res = await fetch(`${apiBaseURL}/food-logs/`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -148,7 +149,7 @@ const Dashboard = ({
     if (loadAllUsers) {
       loadAllUsers().catch(console.error);
     }
-  }, [token, apiBaseURL, loadAllUsers]);
+  }, [token, apiBaseURL, loadAllUsers, isPaidTier]);
 
   useEffect(() => {
     if (status === 'success' || status === 'error') {
@@ -445,28 +446,44 @@ const Dashboard = ({
           </div>
 
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-8">
-            <button
-              onClick={() => handleNavigate('dietlog')}
-              className="group bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:shadow-[0_30px_50px_rgba(16,185,129,0.4)] hover:-translate-y-2 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden cursor-pointer"
-            >
-              <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
-              <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl group-hover:rotate-12 transition-all duration-500 shrink-0 shadow-inner group-hover:scale-110">
-                <Plus className="w-6 h-6" />
+            {isPaidTier ? (
+              <button
+                onClick={() => handleNavigate('dietlog')}
+                className="group bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:shadow-[0_30px_50px_rgba(16,185,129,0.4)] hover:-translate-y-2 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden cursor-pointer"
+              >
+                <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+                <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl group-hover:rotate-12 transition-all duration-500 shrink-0 shadow-inner group-hover:scale-110">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <div className="relative z-10 transition-all duration-300">
+                  <p className="text-white text-xl lg:text-2xl font-black leading-tight tracking-tight transition-all duration-300 group-hover:text-emerald-50">
+                    Log New Food
+                  </p>
+                  <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest opacity-90 mt-1 transition-opacity duration-300 group-hover:opacity-100">
+                    KFCT Assessment
+                  </p>
+                </div>
+                <ChevronRight className="ml-auto lg:hidden w-6 h-6 text-white/50 transition-all duration-300 group-hover:translate-x-1" />
+              </button>
+            ) : (
+              <div className="bg-slate-50 border border-slate-100 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden opacity-80 cursor-not-allowed">
+                <div className="p-3.5 rounded-2xl shrink-0 bg-slate-200 text-slate-400">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-lg lg:text-2xl font-black leading-tight tracking-tight text-slate-400">
+                    Log New Food
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mt-1 text-slate-400">
+                    Upgrade Required
+                  </p>
+                </div>
               </div>
-              <div className="relative z-10 transition-all duration-300">
-                <p className="text-white text-xl lg:text-2xl font-black leading-tight tracking-tight transition-all duration-300 group-hover:text-emerald-50">
-                  Log New Food
-                </p>
-                <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest opacity-90 mt-1 transition-opacity duration-300 group-hover:opacity-100">
-                  KFCT Assessment
-                </p>
-              </div>
-              <ChevronRight className="ml-auto lg:hidden w-6 h-6 text-white/50 transition-all duration-300 group-hover:translate-x-1" />
-            </button>
+            )}
 
             <button
               onClick={handlePdfDownload}
-              disabled={status === 'generating'}
+              disabled={status === 'generating' || userTier !== SubscriptionTier.PREMIUM}
               className={`p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 min-h-[100px] lg:h-56 text-left border gap-4 relative overflow-hidden group ${
                 userTier === SubscriptionTier.PREMIUM
                   ? 'bg-white/80 backdrop-blur-xl border-indigo-100 hover:border-indigo-300 text-indigo-900 hover:bg-white shadow-[0_20px_40px_rgba(99,102,241,0.1)] hover:shadow-[0_30px_50px_rgba(99,102,241,0.2)] hover:-translate-y-2'
@@ -510,64 +527,83 @@ const Dashboard = ({
             <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-[0.2em] transition-colors duration-300">
               Recent Activity
             </h3>
-            <button
-              onClick={() => handleNavigate('dietlog')}
-              className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 underline decoration-2 underline-offset-2 transition-all duration-300 hover:scale-110"
-            >
-              VIEW FULL HISTORY
-            </button>
+            {isPaidTier && (
+              <button
+                onClick={() => handleNavigate('dietlog')}
+                className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 underline decoration-2 underline-offset-2 transition-all duration-300 hover:scale-110"
+              >
+                VIEW FULL HISTORY
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto min-h-[300px] lg:min-h-0 custom-scrollbar">
-            {logs.length > 0 ? (
-              <div className="divide-y divide-slate-50">
-                {logs
-                  .slice(-5)
-                  .reverse()
-                  .map((log, idx) => (
-                    <div
-                      key={log.id}
-                      className="p-5 hover:bg-white/60 transition-all duration-300 flex items-center gap-4 group animate-in fade-in slide-in-from-left-4 duration-500"
-                      style={{ animationDelay: `${idx * 50}ms` }}
-                    >
-                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 shrink-0 group-hover:scale-125 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:rotate-6">
-                        <BookOpen className="w-6 h-6 transition-transform duration-300" />
+            {isPaidTier ? (
+              logs.length > 0 ? (
+                <div className="divide-y divide-slate-50">
+                  {logs
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .slice(0, 5)
+                    .map((log, idx) => (
+                      <div
+                        key={log.id}
+                        className="p-5 hover:bg-white/60 transition-all duration-300 flex items-center gap-4 group animate-in fade-in slide-in-from-left-4 duration-500"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                      >
+                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 shrink-0 group-hover:scale-125 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:rotate-6">
+                          <BookOpen className="w-6 h-6 transition-transform duration-300" />
+                        </div>
+                        <div className="flex-1 min-w-0 transition-all duration-300">
+                          <p className="font-extrabold text-slate-800 text-sm truncate transition-colors duration-300 group-hover:text-emerald-700">
+                            {log.foodName}
+                          </p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide mt-0.5 transition-colors duration-300 group-hover:text-slate-600">
+                            {log.mealType} •{' '}
+                            <span className="text-emerald-600 transition-colors duration-300 group-hover:text-emerald-700">
+                              {log.grams}g
+                            </span>
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0 transition-all duration-300">
+                          <p className="font-black text-slate-700 text-sm transition-colors duration-300 group-hover:text-emerald-700">
+                            {Number(log.nutrients?.calories || 0).toFixed(0)}
+                          </p>
+                          <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider transition-colors duration-300 group-hover:text-slate-600">
+                            kCal
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0 transition-all duration-300">
-                        <p className="font-extrabold text-slate-800 text-sm truncate transition-colors duration-300 group-hover:text-emerald-700">
-                          {log.foodName}
-                        </p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide mt-0.5 transition-colors duration-300 group-hover:text-slate-600">
-                          {log.mealType} •{' '}
-                          <span className="text-emerald-600 transition-colors duration-300 group-hover:text-emerald-700">
-                            {log.grams}g
-                          </span>
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0 transition-all duration-300">
-                        <p className="font-black text-slate-700 text-sm transition-colors duration-300 group-hover:text-emerald-700">
-                          {Number(log.nutrients?.calories || 0).toFixed(0)}
-                        </p>
-                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-wider transition-colors duration-300 group-hover:text-slate-600">
-                          kCal
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-10 transition-all duration-500 hover:opacity-80">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-200 shadow-inner transition-transform duration-300 hover:scale-110">
+                    <Utensils className="w-10 h-10" />
+                  </div>
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest transition-colors duration-300">
+                    Diary is empty
+                  </p>
+                  <button
+                    onClick={() => handleNavigate('dietlog')}
+                    className="mt-4 text-emerald-600 text-xs font-bold hover:underline transition-all duration-300 hover:text-emerald-700 hover:scale-105"
+                  >
+                    Start Logging
+                  </button>
+                </div>
+              )
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center p-10 transition-all duration-500 hover:opacity-80">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-200 shadow-inner transition-transform duration-300 hover:scale-110">
+              <div className="h-full flex flex-col items-center justify-center text-center p-10">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-200 shadow-inner">
                   <Utensils className="w-10 h-10" />
                 </div>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest transition-colors duration-300">
-                  Diary is empty
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">
+                  Food Logging Locked
                 </p>
                 <button
-                  onClick={() => handleNavigate('DietLog')}
-                  className="mt-4 text-emerald-600 text-xs font-bold hover:underline transition-all duration-300 hover:text-emerald-700 hover:scale-105"
+                  onClick={() => handleNavigate('plan')}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
                 >
-                  Start Logging
+                  Upgrade to Unlock
                 </button>
               </div>
             )}

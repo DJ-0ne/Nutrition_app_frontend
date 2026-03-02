@@ -73,6 +73,22 @@ const AdminDashboard = () => {
     );
   };
 
+  const getStatusDisplay = (u) => {
+    if (u.is_staff || u.is_superuser || u.role === 'system_admin') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+          Admin
+        </span>
+      );
+    } else {
+      return u.is_active ? (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+      ) : (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>
+      );
+    }
+  };
+
   if (!(user?.is_staff || user?.is_superuser || user?.role === 'system_admin')) {
     return (
       <div className="max-w-4xl mx-auto p-8 text-center">
@@ -122,7 +138,8 @@ const AdminDashboard = () => {
               <h2 className="text-2xl font-bold text-slate-800">Administrators ({admins.length})</h2>
             </div>
             <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* Desktop Table */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50/80 border-b border-slate-200">
                     <tr>
@@ -142,11 +159,7 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 text-slate-600">{u.email || '—'}</td>
                         <td className="px-6 py-4">{getGenderDisplay(u.sex)}</td>
                         <td className="px-6 py-4 text-slate-600">{formatDate(u.date_joined)}</td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                            Admin
-                          </span>
-                        </td>
+                        <td className="px-6 py-4">{getStatusDisplay(u)}</td>
                       </tr>
                     ))}
                     {admins.length === 0 && (
@@ -154,6 +167,25 @@ const AdminDashboard = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="sm:hidden divide-y divide-slate-100">
+                {admins.map((u) => (
+                  <div key={u.id} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-slate-800">{getFullName(u)}</span>
+                      {getStatusDisplay(u)}
+                    </div>
+                    <div className="text-sm text-slate-600">Username: {u.username}</div>
+                    <div className="text-sm text-slate-600">Email: {u.email || '—'}</div>
+                    <div className="text-sm text-slate-600">Gender: {u.sex ? (u.sex === 'male' ? 'Male' : 'Female') : '—'}</div>
+                    <div className="text-sm text-slate-600">Joined: {formatDate(u.date_joined)}</div>
+                  </div>
+                ))}
+                {admins.length === 0 && (
+                  <div className="p-4 text-center text-slate-500">No administrators found</div>
+                )}
               </div>
             </div>
           </div>
@@ -164,7 +196,8 @@ const AdminDashboard = () => {
               <h2 className="text-2xl font-bold text-slate-800">Clients ({clients.length})</h2>
             </div>
             <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-white/50 shadow-lg overflow-hidden">
-              <div className="overflow-x-auto">
+              {/* Desktop Table */}
+              <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50/80 border-b border-slate-200">
                     <tr>
@@ -184,13 +217,7 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 text-slate-600">{u.email || '—'}</td>
                         <td className="px-6 py-4">{getGenderDisplay(u.sex)}</td>
                         <td className="px-6 py-4 text-slate-600">{formatDate(u.date_joined)}</td>
-                        <td className="px-6 py-4">
-                          {u.is_active ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>
-                          )}
-                        </td>
+                        <td className="px-6 py-4">{getStatusDisplay(u)}</td>
                       </tr>
                     ))}
                     {clients.length === 0 && (
@@ -198,6 +225,25 @@ const AdminDashboard = () => {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="sm:hidden divide-y divide-slate-100">
+                {clients.map((u) => (
+                  <div key={u.id} className="p-4 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-slate-800">{getFullName(u)}</span>
+                      {getStatusDisplay(u)}
+                    </div>
+                    <div className="text-sm text-slate-600">Username: {u.username}</div>
+                    <div className="text-sm text-slate-600">Email: {u.email || '—'}</div>
+                    <div className="text-sm text-slate-600">Gender: {u.sex ? (u.sex === 'male' ? 'Male' : 'Female') : '—'}</div>
+                    <div className="text-sm text-slate-600">Joined: {formatDate(u.date_joined)}</div>
+                  </div>
+                ))}
+                {clients.length === 0 && (
+                  <div className="p-4 text-center text-slate-500">No clients found</div>
+                )}
               </div>
             </div>
           </div>

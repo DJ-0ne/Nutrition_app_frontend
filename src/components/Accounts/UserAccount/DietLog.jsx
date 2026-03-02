@@ -366,7 +366,7 @@ const DietLog = ({
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
-          <div className="lg:col-span-7 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-7 space-y-4 sm:space-y-6 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
                 <div className="relative z-10 flex flex-col h-full justify-between">
@@ -573,7 +573,7 @@ const DietLog = ({
             </div>
           </div>
 
-          <div className="lg:col-span-5 space-y-4 sm:space-y-6 lg:sticky lg:top-24">
+          <div className="lg:col-span-5 space-y-4 sm:space-y-6 lg:sticky lg:top-24 relative z-0">
             <section className="bg-slate-900 p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl text-white shadow-lg border border-slate-800 relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/20 transition-all duration-700"></div>
 

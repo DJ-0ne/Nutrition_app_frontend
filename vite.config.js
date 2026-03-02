@@ -17,7 +17,7 @@ export default defineConfig({
 
       manifest: {
         name: 'ABCDE Nutrition',
-        short_name: 'NutriTrack',
+        short_name: 'ABCDE Nutrition',
         description: 'Track your nutrition and meals',
         theme_color: '#ffffff',
         text_color: '#000000',

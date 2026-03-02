@@ -23,7 +23,6 @@ function App() {
     const handleBeforeInstallPrompt = (e) => {
       // Removed e.preventDefault(); still allowing potential auto-prompt, but capturing for manual
       setDeferredPrompt(e);
-      setShowInstallButton(true); // Show button once event fires
       console.log('beforeinstallprompt event fired!');
     };
 
@@ -32,7 +31,6 @@ function App() {
     // Listen for install outcome (optional logging)
     window.addEventListener('appinstalled', () => {
       console.log('PWA installed successfully!');
-      setShowInstallButton(false);
     });
 
     return () => {
@@ -41,20 +39,10 @@ function App() {
     };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      setDeferredPrompt(null);
-      setShowInstallButton(false);
-    }
-  };
-
   return (
     <Router>
       <AuthProvider>
         <Toaster position="top-center" richColors closeButton duration={4000} />
-        {/* Custom Install Button - Place wherever it fits in your UI, e.g., in header or Landing */}
   
         <Routes>
           <Route path="/" element={<Landing />} />

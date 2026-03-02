@@ -4,7 +4,7 @@ import userData from '../sidebarData/UserSidebarData/userData';
 import { useNavigate } from 'react-router-dom';
 
 function UserSidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const navigate = useNavigate();
@@ -20,6 +20,19 @@ function UserSidebar() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Add padding to body on mobile to prevent content from being blocked by bottom nav
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.paddingBottom = '4rem'; // Matches h-16 (4rem)
+    } else {
+      document.body.style.paddingBottom = '0';
+    }
+
+    return () => {
+      document.body.style.paddingBottom = '0';
+    };
+  }, [isMobile]);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
