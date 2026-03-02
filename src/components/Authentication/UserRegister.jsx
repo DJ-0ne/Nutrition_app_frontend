@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -34,7 +34,7 @@ const Register = () => {
 
     setCheckingUsername(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/check-username/?username=${value}`);
+      const response = await fetch(`${API_BASE_URL}/auth/check-username/?username=${value}`);
       const data = await response.json();
       setUsernameAvailable(data.available);
     } catch (error) {
@@ -75,7 +75,7 @@ const Register = () => {
         password2: confirmPassword,
       };
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/register/`, {
+      const response = await fetch(`${API_BASE_URL}/auth/register/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ const Register = () => {
 
   // Google Sign-Up
   const handleGoogleSignUp = () => {
-    window.location.href = `${API_BASE_URL}/api/auth/google/signup/`;
+    window.location.href = `${API_BASE_URL}/auth/google/signup/`;
   };
 
   return (

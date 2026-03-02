@@ -45,7 +45,7 @@ const AdminPayments = () => {
   // ==================== LOAD PRICES FROM DATABASE ====================
   const loadPrices = async () => {
     try {
-      const res = await fetch(`${apiBaseURL}/api/subscription-plans/`, {
+      const res = await fetch(`${apiBaseURL}/subscription-plans/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -66,7 +66,7 @@ const AdminPayments = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${apiBaseURL}/api/users/`, {
+      const res = await fetch(`${apiBaseURL}/users/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -104,7 +104,7 @@ const AdminPayments = () => {
   // ==================== UPDATE USER TIER ====================
   const updateUserTier = async (userId, newTier) => {
     try {
-      const res = await fetch(`${apiBaseURL}/api/users/${userId}/update_tier/`, {
+      const res = await fetch(`${apiBaseURL}/users/${userId}/update_tier/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ const AdminPayments = () => {
   // ==================== SAVE PRICES TO DATABASE ====================
   const savePrices = async () => {
     try {
-      const res = await fetch(`${apiBaseURL}/api/subscription-plans/update-prices/`, {
+      const res = await fetch(`${apiBaseURL}/subscription-plans/update-prices/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

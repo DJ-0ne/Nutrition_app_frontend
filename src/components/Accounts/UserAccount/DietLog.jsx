@@ -51,7 +51,7 @@ const DietLog = ({
   const fetchAnthroData = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${apiBaseURL}/api/profile/`, {
+      const res = await fetch(`${apiBaseURL}/profile/`, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -77,7 +77,7 @@ const DietLog = ({
       return;
     }
     try {
-      const res = await fetch(`${apiBaseURL}/api/food-logs/`, {
+      const res = await fetch(`${apiBaseURL}/food-logs/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -124,7 +124,7 @@ const DietLog = ({
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${apiBaseURL}/api/search-foods/?q=${encodeURIComponent(query)}`, {
+      const res = await fetch(`${apiBaseURL}/search-foods/?q=${encodeURIComponent(query)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -171,7 +171,7 @@ const DietLog = ({
     formData.append('photo', file);
 
     try {
-      const res = await fetch(`${apiBaseURL}/api/analyze-food-photo/`, {
+      const res = await fetch(`${apiBaseURL}/analyze-food-photo/`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -228,7 +228,7 @@ const DietLog = ({
     };
 
     try {
-      const res = await fetch(`${apiBaseURL}/api/food-logs/`, {
+      const res = await fetch(`${apiBaseURL}/food-logs/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -262,7 +262,7 @@ const DietLog = ({
     if (!window.confirm('Clear all meal logs? This cannot be undone.')) return;
 
     try {
-      const res = await fetch(`${apiBaseURL}/api/food-logs/clear/`, {
+      const res = await fetch(`${apiBaseURL}/food-logs/clear/`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -294,7 +294,7 @@ const DietLog = ({
 
     setLoadingInsights(true);
     try {
-      const res = await fetch(`${apiBaseURL}/api/generate-insights/`, {
+      const res = await fetch(`${apiBaseURL}/generate-insights/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

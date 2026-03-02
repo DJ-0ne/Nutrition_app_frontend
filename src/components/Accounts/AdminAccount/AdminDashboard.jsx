@@ -21,7 +21,7 @@ const AdminDashboard = () => {
       if (!token) throw new Error('Not authenticated');
 
       const res = await fetch(
-        `${apiBaseURL}/api/admin/users-overview/?page=${currentPage}&page_size=${pageSize}`,
+        `${apiBaseURL}/admin/users-overview/?page=${currentPage}&page_size=${pageSize}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

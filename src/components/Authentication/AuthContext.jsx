@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useNavigate } from 'react-router-dom';
 import { flushSync } from 'react-dom';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
 const AuthContext = createContext();
 
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       if (access_token && refresh_token) {
-        await fetch(`${API_BASE_URL}/api/auth/logout/`, {
+        await fetch(`${API_BASE_URL}/auth/logout/`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${access_token}`,
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh-token/`, {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh-token/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token }),
@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
 
       if (access_token && storedUser) {
         try {
-          const response = await fetch(`${API_BASE_URL}/api/auth/validate-token/`, {
+          const response = await fetch(`${API_BASE_URL}/auth/validate-token/`, {
             headers: {
               Authorization: `Bearer ${access_token}`,
               'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
               const refreshed = await refreshTokenFunc();
               if (refreshed) {
                 const newToken = localStorage.getItem('access_token');
-                const revalidate = await fetch(`${API_BASE_URL}/api/auth/validate-token/`, {
+                const revalidate = await fetch(`${API_BASE_URL}/auth/validate-token/`, {
                   headers: { Authorization: `Bearer ${newToken}` },
                 });
                 if (revalidate.ok) {
@@ -139,7 +139,7 @@ export const AuthProvider = ({ children }) => {
     async (email, password) => {
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/login/`, {
+        const response = await fetch(`${API_BASE_URL}/auth/login/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),

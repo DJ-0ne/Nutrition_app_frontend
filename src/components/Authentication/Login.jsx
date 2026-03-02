@@ -19,10 +19,10 @@ const Login = () => {
   const navigate = useNavigate();
 
   // Google Sign-In
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
   const handleGoogleSignIn = () => {
-    window.location.href = `${API_BASE_URL}/api/auth/google/login/`;
+    window.location.href = `${API_BASE_URL}/auth/google/login/`;
   };
 
   // Smart redirect based on user role

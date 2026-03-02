@@ -3,7 +3,7 @@ import { Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password/`, {
+      const res = await fetch(`${API_BASE_URL}/auth/forgot-password/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

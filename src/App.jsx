@@ -1,4 +1,5 @@
-// App.jsx - FULL CORRECTED FILE
+// App.jsx - ADDED CUSTOM INSTALL BUTTON FOR MANUAL PROMPT
+import { useEffect, useState } from 'react'; // Added useState
 import { AuthProvider } from "./components/Authentication/AuthContext";
 import ProtectedRoute from "./components/Authentication/Protected";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
@@ -16,10 +17,45 @@ import ResetPassword from "./components/Authentication/ResetPassword";
 import { Toaster } from "sonner";
 
 function App() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      // Removed e.preventDefault(); still allowing potential auto-prompt, but capturing for manual
+      setDeferredPrompt(e);
+      setShowInstallButton(true); // Show button once event fires
+      console.log('beforeinstallprompt event fired!');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Listen for install outcome (optional logging)
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA installed successfully!');
+      setShowInstallButton(false);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', () => {});
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setShowInstallButton(false);
+    }
+  };
+
   return (
     <Router>
       <AuthProvider>
         <Toaster position="top-center" richColors closeButton duration={4000} />
+        {/* Custom Install Button - Place wherever it fits in your UI, e.g., in header or Landing */}
+  
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login/" element={<Login />} />

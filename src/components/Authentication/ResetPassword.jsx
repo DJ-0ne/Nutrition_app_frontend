@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
 const ResetPassword = () => {
   const { uid, token } = useParams();
@@ -31,7 +31,7 @@ const ResetPassword = () => {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/reset-password/${uid}/${token}/`, {
+      const res = await fetch(`${API_BASE_URL}/auth/reset-password/${uid}/${token}/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, confirm_password: confirmPassword }),

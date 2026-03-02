@@ -9,72 +9,96 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'generateSW',
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.png', 'icon-512.png', 'apple-touch-icon.png'],
+      manifestFilename: 'manifest.json',
+
+      includeAssets: ['favicon.ico', 'abcdelogo-144.png', 'abcdelogo-192.png', 'client-512.png', 'client-maskable-512.png', 'screenshot-desktop.png', 'screenshot-mobile.png', 'apple-touch-icon.png'], // Added apple-touch-icon if using
+
       manifest: {
-        name: 'Nutrition Tracker',
+        name: 'ABCDE Nutrition',
         short_name: 'NutriTrack',
-        description: 'Track your nutrition and meals offline',
-        theme_color: '#10b981',
-        background_color: '#ffffff',
+        description: 'Track your nutrition and meals',
+        theme_color: '#ffffff',
+        text_color: '#000000',
         display: 'standalone',
-        orientation: 'portrait',
+        orientation: 'any', // Changed to 'any' for mobile flexibility
         scope: '/',
         start_url: '/',
+        id: '/?homescreen=1',
         categories: ['health', 'fitness', 'food'],
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'abcdelogo-144.png',
+            sizes: '144x144',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'abcdelogo-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'icon-512.png',
+            src: 'client-512.png', // Added
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'maskable-icon-512x512.png',
+            src: 'client-maskable-512.png', // Added
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
           }
         ],
-        // Android specific
+        screenshots: [
+          {
+            src: 'screenshot-desktop.png',
+            sizes: '1890x967',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Desktop View'
+          },
+          {
+            src: 'screenshot-mobile.png',
+            sizes: '967x1890',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Mobile View'
+          }
+        ],
         shortcuts: [
           {
             name: 'Log Meal',
             short_name: 'Log',
             description: 'Quickly log a meal',
             url: '/log-meal',
-            icons: [{ src: 'icon-96.png', sizes: '96x96' }]
+            icons: [{ src: 'abcdelogo-192.png', sizes: '192x192', type: 'image/png' }]
           },
           {
             name: 'View Progress',
             short_name: 'Progress',
             description: 'Check your nutrition progress',
             url: '/progress',
-            icons: [{ src: 'icon-96.png', sizes: '96x96' }]
+            icons: [{ src: 'abcdelogo-192.png', sizes: '192x192', type: 'image/png' }]
           }
-        ],
-        // For Android 12+ theming
-        edge_to_edge: true,
-        launch_handler: {
-          client_mode: 'focus-existing'
-        }
+        ]
       },
+
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: process.env.NODE_ENV === 'production'
+          ? ['**/*.{js,css,html,ico,png,svg,woff2,jpg,jpeg}']
+          : [],
+
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.nutrition\.com\/.*/i,
+            urlPattern: /^https:\/\/a\.nutristrategist\.africa\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60 // 24 hours
-              }
+              expiration: { maxEntries: 50, maxAgeSeconds: 24 * 60 * 60 }
             }
           },
           {
@@ -82,22 +106,28 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
-              }
+              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 }
             }
           }
         ]
       },
+
       devOptions: {
-        enabled: false
+        enabled: true,
+        type: 'module'
       }
     })
   ],
+
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src')
     }
+  },
+
+  define: {
+    'process.env.VITE_API_URL': JSON.stringify(
+      process.env.VITE_API_URL || 'https://a.nutristrategist.africa/api'
+    )
   }
 })

@@ -15,7 +15,7 @@ const DietHistory = () => {
           return;
         }
         try {
-          const res = await fetch(`${apiBaseURL}/api/food-logs/`, {
+          const res = await fetch(`${apiBaseURL}/food-logs/`, {
             headers: { Authorization: `Bearer ${token}` },
           });
     

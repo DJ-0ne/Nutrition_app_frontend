@@ -334,7 +334,7 @@ const Anthropometric = ({ onSave = () => {} }) => {
         </div>
       </div>
 
-      {/* Main Content -完全相同 but using backend field names */}
+      {/* Main Content - but using backend field names */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <form onSubmit={handleSubmit} className="w-full max-w-[2000px] mx-auto">
           {/* Quick Stats Cards */}

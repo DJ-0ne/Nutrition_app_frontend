@@ -20,7 +20,7 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
     const fetchTier = async () => {
       if (!token) return;
       try {
-        const res = await fetch(`${apiBaseURL}/api/profile/`, {
+        const res = await fetch(`${apiBaseURL}/profile/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -38,7 +38,7 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
   const loadMealPlan = async () => {
     if (token) {
       try {
-        const res = await fetch(`${apiBaseURL}/api/meal-plan/`, {
+        const res = await fetch(`${apiBaseURL}/meal-plan/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -78,7 +78,7 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
     if (!token) return;
 
     try {
-      await fetch(`${apiBaseURL}/api/save-meal-plan/`, {
+      await fetch(`${apiBaseURL}/save-meal-plan/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${apiBaseURL}/api/generate-meal-plan/`, {
+      const res = await fetch(`${apiBaseURL}/generate-meal-plan/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

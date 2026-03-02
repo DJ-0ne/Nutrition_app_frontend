@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { MEAL_TYPES } from "../../../constants/mealTypes";
 import { Plus, ArrowLeft } from "lucide-react";
 import axios from "axios";
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "../../../auth/useAuth";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -57,7 +58,9 @@ const Recall = ({ userTier: propUserTier }) => {
         const tier = data.tier || data.subscription_tier || data.subscriptionTier;
         if (tier) setCurrentTier(tier);
       } catch (e) {
-        console.warn('Tier fetch failed');
+        if (e.message) {
+          toast.error("Failed to fetch subscription tier");
+        }
       }
     };
     fetchTier();

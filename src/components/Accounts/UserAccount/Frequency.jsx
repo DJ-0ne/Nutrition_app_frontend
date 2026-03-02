@@ -32,7 +32,7 @@ const Frequency = () => {
     const fetchTier = async () => {
       if (!token) return;
       try {
-        const res = await fetch(`${apiBaseURL}/api/profile/`, {
+        const res = await fetch(`${apiBaseURL}/profile/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -57,7 +57,7 @@ const Frequency = () => {
 
       try {
         // Load responses
-        const responsesRes = await fetch(`${apiBaseURL}/api/ffq-responses/`, {
+        const responsesRes = await fetch(`${apiBaseURL}/ffq-responses/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -71,7 +71,7 @@ const Frequency = () => {
         }
 
         // Load cached insights
-        const insightsRes = await fetch(`${apiBaseURL}/api/ffq-insights/`, {
+        const insightsRes = await fetch(`${apiBaseURL}/ffq-insights/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (insightsRes.ok) {
@@ -105,7 +105,7 @@ const Frequency = () => {
 
     setLoadingInsights(true);
     try {
-      const res = await fetch(`${apiBaseURL}/api/generate-ffq-insights/`, {
+      const res = await fetch(`${apiBaseURL}/generate-ffq-insights/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -145,7 +145,7 @@ const Frequency = () => {
     }
 
     try {
-      const saveRes = await fetch(`${apiBaseURL}/api/save-ffq/`, {
+      const saveRes = await fetch(`${apiBaseURL}/save-ffq/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -30,7 +30,7 @@ const Subscription = ({ currentTier: initialTier, onUpgrade: parentOnUpgrade }) 
   const fetchCurrentTier = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${apiBaseURL}/api/profile/`, {
+      const res = await fetch(`${apiBaseURL}/profile/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -83,7 +83,7 @@ const Subscription = ({ currentTier: initialTier, onUpgrade: parentOnUpgrade }) 
       }
       setLoading(true);
       try {
-        const res = await fetch(`${apiBaseURL}/api/subscription-plans/`, {
+        const res = await fetch(`${apiBaseURL}/subscription-plans/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -135,7 +135,7 @@ const Subscription = ({ currentTier: initialTier, onUpgrade: parentOnUpgrade }) 
     }
 
     try {
-      const res = await fetch(`${apiBaseURL}/api/update-subscription/`, {
+      const res = await fetch(`${apiBaseURL}/update-subscription/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ const Subscription = ({ currentTier: initialTier, onUpgrade: parentOnUpgrade }) 
     setModalMode('sending');
 
     try {
-      const res = await fetch(`${apiBaseURL}/api/mpesa/stk-push/`, {
+      const res = await fetch(`${apiBaseURL}/mpesa/stk-push/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,7 +227,7 @@ const Subscription = ({ currentTier: initialTier, onUpgrade: parentOnUpgrade }) 
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${apiBaseURL}/api/mpesa/status/${checkoutId}/`, {
+        const res = await fetch(`${apiBaseURL}/mpesa/status/${checkoutId}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
