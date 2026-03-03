@@ -1,4 +1,4 @@
-// components/Authentication/GoogleCallback.jsx - FULL FINAL CORRECTED FILE
+// components/Authentication/GoogleCallback.jsx - UPDATED FOR OTP HANDLING
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthContext } from './AuthContext';
@@ -15,6 +15,7 @@ const GoogleCallback = () => {
 
     const params = new URLSearchParams(location.search);
     const googleError = params.get('google_error');
+    const needsOtp = params.get('needs_otp');
 
     if (googleError) {
       let errorMessage = 'Google sign-in failed';
@@ -32,6 +33,14 @@ const GoogleCallback = () => {
 
       toast.error(errorMessage);
       window.location.href = `${window.location.origin}/#/login`;
+      return;
+    }
+
+    // Handle OTP redirect for signup
+    if (needsOtp) {
+      const email = params.get('email');
+      toast.success('Account created successfully! Please verify your email with OTP.');
+      window.location.href = `${window.location.origin}/#/otp?email=${encodeURIComponent(email)}`;
       return;
     }
 

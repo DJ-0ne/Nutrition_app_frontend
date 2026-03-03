@@ -1,5 +1,5 @@
 // =============================================
-// FULL UPDATED Register.jsx
+// FULL UPDATED Register.jsx - WITH GOOGLE SPINNER + OTP flow
 // =============================================
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, User, Phone, AtSign } from 'lucide-react';
@@ -20,6 +20,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false); // ← NEW
   const [usernameAvailable, setUsernameAvailable] = useState(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
 
@@ -101,14 +102,10 @@ const Register = () => {
         return;
       }
 
-      toast.success('Account created successfully!');
+      toast.success('Account created! Please check your email for verification code.');
       
-      if (data.access) {
-        localStorage.setItem('access_token', data.access);
-        if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
-      }
-      navigate('/Login');
+      // Instead of saving tokens (since user is inactive), redirect to OTP with email
+      navigate('/otp', { state: { email: email.toLowerCase().trim() } });
 
     } catch (error) {
       toast.error('Network error. Please check your connection.');
@@ -117,9 +114,14 @@ const Register = () => {
     }
   };
 
-  // Google Sign-Up
+  // UPDATED Google Sign-Up with spinner
   const handleGoogleSignUp = () => {
-    window.location.href = `${API_BASE_URL}/auth/google/signup/`;
+    setIsGoogleLoading(true);
+    const googleUrl = `${API_BASE_URL}/auth/google/signup/`;
+    
+    setTimeout(() => {
+      window.location.href = googleUrl;
+    }, 320);
   };
 
   return (
@@ -223,6 +225,8 @@ const Register = () => {
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* ... all form fields unchanged (name, email, username, phone, password, etc.) ... */}
+            {/* (I kept the full form exactly as you had it - only the Google button was updated) */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -466,17 +470,28 @@ const Register = () => {
             </div>
           </div>
 
+          {/* UPDATED GOOGLE BUTTON WITH SPINNER */}
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            className="w-full flex items-center justify-center gap-3 cursor-pointer border border-gray-300 bg-white hover:bg-gray-50 py-3.5 rounded-xl transition-all duration-200 font-medium text-gray-700 shadow-sm"
+            disabled={isGoogleLoading}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 py-3.5 rounded-xl transition-all duration-200 font-medium text-gray-700 shadow-sm disabled:opacity-70 disabled:cursor-wait"
           >
-            <img
-              src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_18dp.png"
-              alt="Google"
-              className="w-5 h-5"
-            />
-            Sign up with Google
+            {isGoogleLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent animate-spin rounded-full"></div>
+                <span>Signing up to Google...</span>
+              </>
+            ) : (
+              <>
+                <img
+                  src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_18dp.png"
+                  alt="Google"
+                  className="w-5 h-5"
+                />
+                Sign up with Google
+              </>
+            )}
           </button>
 
           {/* Terms and Login Link */}

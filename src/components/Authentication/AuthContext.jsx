@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { flushSync } from 'react-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
 const AuthContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -21,176 +21,191 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // ========== Helper functions ==========
-  const logout = useCallback(async () => {
-    const access_token = localStorage.getItem('access_token');
-    const refresh_token = localStorage.getItem('refresh_token');
-
-    try {
-      if (access_token && refresh_token) {
-        await fetch(`${API_BASE_URL}/auth/logout/`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refresh_token }),
-        });
-      }
-    } catch (err) {
-      // ignore
-    } finally {
-      localStorage.clear();
-      flushSync(() => {
-        setUser(null);
-      });
-      navigate('/Login', { replace: true });
-    }
-  }, [navigate]);
-
-  const refreshTokenFunc = useCallback(async () => {
-    const refresh_token = localStorage.getItem('refresh_token');
-    if (!refresh_token) {
-      logout();
-      return false;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh-token/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('access_token', data.access);
-        if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
-        return true;
-      } else {
-        logout();
-        return false;
-      }
-    } catch {
-      logout();
-      return false;
-    }
-  }, [logout]);
-
   // Initialize auth from localStorage
   useEffect(() => {
     const initializeAuth = async () => {
-      const access_token = localStorage.getItem('access_token');
-      const refresh_token = localStorage.getItem('refresh_token');
+      const accessToken = localStorage.getItem('access_token');
+      const refreshToken = localStorage.getItem('refresh_token');
       const storedUser = localStorage.getItem('user');
-
-      if (access_token && storedUser) {
+      
+      if (accessToken && storedUser) {
         try {
           const response = await fetch(`${API_BASE_URL}/auth/validate-token/`, {
-            headers: {
-              Authorization: `Bearer ${access_token}`,
+            headers: { 
+              'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
+              'Accept': 'application/json'
             },
           });
-
+          
           if (response.ok) {
             const data = await response.json();
             setUser(data.user);
           } else {
-            if (refresh_token) {
-              const refreshed = await refreshTokenFunc();
-              if (refreshed) {
-                const newToken = localStorage.getItem('access_token');
-                const revalidate = await fetch(`${API_BASE_URL}/auth/validate-token/`, {
-                  headers: { Authorization: `Bearer ${newToken}` },
-                });
-                if (revalidate.ok) {
-                  const data = await revalidate.json();
-                  setUser(data.user);
-                } else {
-                  logout();
-                }
-              } else {
+            // Try to refresh token
+            if (refreshToken) {
+              const refreshSuccess = await refreshToken();
+              if (!refreshSuccess) {
                 logout();
               }
             } else {
               logout();
             }
           }
-        } catch {
+        } catch (err) {
+
           logout();
+          return err;
         }
       }
       setLoading(false);
     };
-
+    
     initializeAuth();
-  }, [logout, refreshTokenFunc]);
+  }, []);
 
-  // Auto refresh token every 55 minutes
+  // Auto refresh token
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (user) refreshTokenFunc();
-    }, 55 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [user, refreshTokenFunc]);
+    const refreshInterval = setInterval(() => {
+      if (user) refreshToken();
+    }, 55 * 60 * 1000); // Refresh every 55 minutes
+    
+    return () => clearInterval(refreshInterval);
+  }, [user]);
 
-  const login = useCallback(
-    async (email, password) => {
-      setError(null);
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/login/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          if (data.email) throw new Error(data.email[0]);
-          if (data.password) throw new Error(data.password[0]);
-          if (data.non_field_errors) throw new Error(data.non_field_errors[0]);
-          if (data.error) throw new Error(data.error);
-          if (data.detail) throw new Error(data.detail);
-          throw new Error('Login failed');
-        }
-
-        localStorage.setItem('access_token', data.access);
-        localStorage.setItem('refresh_token', data.refresh);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
-
-        // Role-based redirect
-        if (data.redirect) {
-          navigate(data.redirect);
-        } else if (data.user.is_staff || data.user.is_superuser || data.user.role === 'system_admin') {
+  const login = async (email, password) => {
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Handle specific error messages
+        if (data.email) throw new Error(data.email[0]);
+        if (data.password) throw new Error(data.password[0]);
+        if (data.non_field_errors) throw new Error(data.non_field_errors[0]);
+        if (data.error) throw new Error(data.error);
+        if (data.detail) throw new Error(data.detail);
+        throw new Error('Login failed. Please check your credentials.');
+      }
+      
+      // Save tokens
+      localStorage.setItem('access_token', data.access);
+      localStorage.setItem('refresh_token', data.refresh);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      if (data.session_id) {
+        localStorage.setItem('session_id', data.session_id);
+      }
+      
+      setUser(data.user);
+      
+      // Role-based redirect
+      if (data.redirect) {
+        navigate(data.redirect);
+      } 
+      else {
+        // Default redirect based on role
+        if (data.user.role === 'system_admin') {
           navigate('/admin/dashboard');
         } else {
           navigate('/user/Home');
         }
-
-        return { success: true, user: data.user };
-      } catch (err) {
-        const msg = err.message || 'Login failed';
-        setError(msg);
-        return { success: false, error: msg };
       }
-    },
-    [navigate]
-  );
+      
+      return { success: true, user: data.user };
+      
+    } catch (err) {
+      const errorMessage = err.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
 
-  const getAuthHeaders = useCallback(() => {
+  const logout = async () => {
+    const accessToken = localStorage.getItem('access_token');
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    try {
+      if (accessToken && refreshToken) {
+        await fetch(`${API_BASE_URL}/auth/logout/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+      }
+    } catch (error) {
+      return error;
+    } finally {
+      // Clear everything regardless of API response
+      localStorage.clear();
+      setUser(null);
+      navigate('/Login');
+    }
+  };
+
+  const refreshToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      logout();
+      return false;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh-token/`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('access_token', data.access);
+        if (data.refresh) {
+          localStorage.setItem('refresh_token', data.refresh);
+        }
+        return true;
+      } else {
+        logout();
+        return false;
+      }
+    } catch (err) {
+      
+      logout();
+      return { success: false, error: err };
+    }
+  };
+
+  const getAuthHeaders = () => {
     const token = localStorage.getItem('access_token');
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     return headers;
-  }, []);
-
-  // ✅ Memoized updateUser – crucial to prevent infinite loops
-  const updateUser = useCallback((userData) => {
-    setUser(userData);
-  }, []);
+  };
 
   const value = {
     user,
@@ -198,11 +213,15 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     logout,
-    refreshToken: refreshTokenFunc,
+    refreshToken,
     getAuthHeaders,
+    updateUser: setUser,
     isAuthenticated: !!user,
-    updateUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

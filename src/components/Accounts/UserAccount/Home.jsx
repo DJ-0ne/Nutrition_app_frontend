@@ -445,42 +445,29 @@ const Dashboard = ({
             </div>
           </div>
 
+          {/* Two‑button row: Log New Food (unconditional) + 90‑Day Nutrition Report (Premium‑gated) */}
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-8">
-            {isPaidTier ? (
-              <button
-                onClick={() => handleNavigate('dietlog')}
-                className="group bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:shadow-[0_30px_50px_rgba(16,185,129,0.4)] hover:-translate-y-2 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden cursor-pointer"
-              >
-                <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
-                <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl group-hover:rotate-12 transition-all duration-500 shrink-0 shadow-inner group-hover:scale-110">
-                  <Plus className="w-6 h-6" />
-                </div>
-                <div className="relative z-10 transition-all duration-300">
-                  <p className="text-white text-xl lg:text-2xl font-black leading-tight tracking-tight transition-all duration-300 group-hover:text-emerald-50">
-                    Log New Food
-                  </p>
-                  <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest opacity-90 mt-1 transition-opacity duration-300 group-hover:opacity-100">
-                    KFCT Assessment
-                  </p>
-                </div>
-                <ChevronRight className="ml-auto lg:hidden w-6 h-6 text-white/50 transition-all duration-300 group-hover:translate-x-1" />
-              </button>
-            ) : (
-              <div className="bg-slate-50 border border-slate-100 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden opacity-80 cursor-not-allowed">
-                <div className="p-3.5 rounded-2xl shrink-0 bg-slate-200 text-slate-400">
-                  <Plus className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-lg lg:text-2xl font-black leading-tight tracking-tight text-slate-400">
-                    Log New Food
-                  </p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest mt-1 text-slate-400">
-                    Upgrade Required
-                  </p>
-                </div>
+            {/* Log New Food – now visible to all users */}
+            <button
+              onClick={() => handleNavigate('dietlog')}
+              className="group bg-gradient-to-br from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 p-6 lg:p-8 rounded-[2rem] flex items-center lg:flex-col lg:justify-between lg:items-start transition-all duration-500 shadow-[0_20px_40px_rgba(16,185,129,0.2)] hover:shadow-[0_30px_50px_rgba(16,185,129,0.4)] hover:-translate-y-2 min-h-[100px] lg:h-56 text-left gap-4 relative overflow-hidden cursor-pointer"
+            >
+              <div className="absolute top-0 right-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay" />
+              <div className="bg-white/20 backdrop-blur-md p-3.5 rounded-2xl group-hover:rotate-12 transition-all duration-500 shrink-0 shadow-inner group-hover:scale-110">
+                <Plus className="w-6 h-6" />
               </div>
-            )}
+              <div className="relative z-10 transition-all duration-300">
+                <p className="text-white text-xl lg:text-2xl font-black leading-tight tracking-tight transition-all duration-300 group-hover:text-emerald-50">
+                  Log New Food
+                </p>
+                <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest opacity-90 mt-1 transition-opacity duration-300 group-hover:opacity-100">
+                  KFCT Assessment
+                </p>
+              </div>
+              <ChevronRight className="ml-auto lg:hidden w-6 h-6 text-white/50 transition-all duration-300 group-hover:translate-x-1" />
+            </button>
 
+            {/* 90‑Day Nutrition Report – still gated by Premium */}
             <button
               onClick={handlePdfDownload}
               disabled={status === 'generating' || userTier !== SubscriptionTier.PREMIUM}

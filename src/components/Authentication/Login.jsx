@@ -1,8 +1,8 @@
 // =============================================
-// FULL UPDATED Login.jsx
+// FULL UPDATED Login.jsx - WITH GOOGLE SPINNER
 // =============================================
 import React, { useState, useEffect } from "react";
-import { useNavigate , Link} from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuthContext } from "./AuthContext";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -15,6 +15,7 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false); // ← NEW
   const { user, login, error: authError } = useAuthContext();
   const navigate = useNavigate();
 
@@ -22,7 +23,13 @@ const Login = () => {
   const API_BASE_URL = import.meta.env.VITE_API_URL || process.env.VITE_API_URL;
 
   const handleGoogleSignIn = () => {
-    window.location.href = `${API_BASE_URL}/auth/google/login/`;
+    setIsGoogleLoading(true);
+    const googleUrl = `${API_BASE_URL}/auth/google/login/`;
+    
+    // Small delay so the spinner is visible
+    setTimeout(() => {
+      window.location.href = googleUrl;
+    }, 320);
   };
 
   // Smart redirect based on user role
@@ -231,6 +238,7 @@ const Login = () => {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* ... all form fields unchanged (email, password, etc.) ... */}
             <div>
               <label
                 htmlFor="email"
@@ -373,17 +381,28 @@ const Login = () => {
             </div>
           </div>
 
+          {/* UPDATED GOOGLE BUTTON WITH SPINNER */}
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center cursor-pointer justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 py-3.5 rounded-xl transition-all duration-200 font-medium text-gray-700 shadow-sm"
+            disabled={isGoogleLoading}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white hover:bg-gray-50 py-3.5 rounded-xl transition-all duration-200 font-medium text-gray-700 shadow-sm disabled:opacity-70 disabled:cursor-wait"
           >
-            <img
-              src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_18dp.png"
-              alt="Google"
-              className="w-5 h-5"
-            />
-            Sign in with Google
+            {isGoogleLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent animate-spin rounded-full"></div>
+                <span>Signing in to Google...</span>
+              </>
+            ) : (
+              <>
+                <img
+                  src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_18dp.png"
+                  alt="Google"
+                  className="w-5 h-5"
+                />
+                Sign in with Google
+              </>
+            )}
           </button>
 
           {/* Sign Up Link */}

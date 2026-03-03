@@ -14,6 +14,8 @@ import AdminMain from "./components/Accounts/AdminAccount/AdminMain";
 import GoogleCallback from "./components/Authentication/GoogleCallback";
 import ForgotPassword from "./components/Authentication/ForgotPassword";
 import ResetPassword from "./components/Authentication/ResetPassword";
+import OTPVerification from './components/Authentication/OTPVerifiication';
+
 import { Toaster } from "sonner";
 
 function App() {
@@ -50,7 +52,7 @@ function App() {
           <Route path="/logout/" element={<Logout />} />
           <Route path="/register/" element={<Register />} />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
-
+          <Route path="/otp" element={<OTPVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/reset-password/:uid/:token"
