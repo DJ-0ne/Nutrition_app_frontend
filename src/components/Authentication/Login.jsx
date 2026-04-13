@@ -201,7 +201,7 @@ const Login = () => {
           <div className="lg:hidden text-center mb-8">
             <div className="mx-auto h-20 w-20 rounded-2xl bg-amber-500 flex items-center justify-center mb-4 shadow-lg overflow-hidden">
               <img
-                src="/abcdelogo.jpg"
+                src="/abcdelogo.png"
                 alt="ABCDE Nutrition"
                 className="w-full h-full object-cover"
               />
@@ -326,7 +326,7 @@ const Login = () => {
             <div className="flex items-center justify-between">
               <Link
                 to="/forgot-password"
-                className="text-sm font-medium text-amber-600 hover:text-amber-500"
+                className="text-sm font-medium text-amber-600 hover:text-amber-500 cursor-pointer"
               >
                 Forgot password?
               </Link>
@@ -335,7 +335,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-amber-500 text-white py-3.5 px-4 rounded-xl hover:bg-amber-600 focus:ring-4 focus:ring-amber-200 transition duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-amber-200 cursor-pointer"
+              className="w-full cursor-pointer bg-amber-500 text-white py-3.5 px-4 rounded-xl hover:bg-amber-600 focus:ring-4 focus:ring-amber-200 transition duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-amber-200"
             >
               {isLoading ? (
                 <>

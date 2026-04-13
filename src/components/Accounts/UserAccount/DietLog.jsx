@@ -1,6 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, CheckCircle } from 'lucide-react';
+import { Plus, Search, CheckCircle, Lock, Camera, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../../auth/useAuth';
 import { MEAL_TYPES } from '../../../constants/mealTypes';
@@ -8,13 +7,13 @@ import { SubscriptionTier } from '../../../constants/subscriptionTier';
 import { useNavigate } from 'react-router-dom';
 
 const DietLog = ({ 
-  userTier: propUserTier = SubscriptionTier.PREMIUM, 
+  userTier: propUserTier = SubscriptionTier.FREE,
   onNavigate = () => {} 
 }) => {
   const { token, apiBaseURL } = useAuth();
   const navigate = useNavigate();
 
-  const [currentTier, setCurrentTier] = useState(propUserTier);
+  const [currentTier, setCurrentTier] = useState(SubscriptionTier.FREE);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [allFoods, setAllFoods] = useState([]);
@@ -32,9 +31,17 @@ const DietLog = ({
   const [anthroData, setAnthroData] = useState(null);
   const [logs, setLogs] = useState([]);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     if (propUserTier) setCurrentTier(propUserTier);
   }, [propUserTier]);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const totals = useMemo(() => {
     const initial = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
@@ -159,12 +166,16 @@ const DietLog = ({
   };
 
   const handlePhotoScan = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!token) {
-      toast.error('Authentication required');
+    if (currentTier !== SubscriptionTier.PREMIUM) {
+      toast.error("Photo Scan is a Premium feature", {
+        description: "Upgrade to Premium to unlock instant food recognition.",
+        action: { label: "Upgrade", onClick: () => navigate('/user/userPlan') }
+      });
       return;
     }
+
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setIsScanning(true);
     const formData = new FormData();
@@ -177,22 +188,18 @@ const DietLog = ({
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Analysis failed');
-      }
+      if (!res.ok) throw new Error('Analysis failed');
 
       const data = await res.json();
       const detected = data.detected_food?.trim();
 
-      if (detected && detected !== 'No food detected' && detected.toLowerCase() !== 'none') {
+      if (detected && detected !== 'No food detected') {
         setSearchTerm(detected);
-        toast.success(`Food detected: ${detected}`);
+        toast.success(`Detected: ${detected}`);
       } else {
         toast.error('No food detected in the image');
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.message || 'Failed to analyze photo');
     } finally {
       setIsScanning(false);
@@ -368,7 +375,7 @@ const DietLog = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
           <div className="lg:col-span-7 space-y-4 sm:space-y-6 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-all cursor-pointer">
+              <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl sm:rounded-2xl p-4 text-white shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-all">
                 <div className="relative z-10 flex flex-col h-full justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -376,28 +383,75 @@ const DietLog = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <h3 className="font-black uppercase tracking-widest text-[10px] sm:text-xs">AI PHOTO SCAN</h3>
+                      <h3 className="font-black uppercase tracking-widest text-[10px] sm:text-xs">PHOTO SCAN</h3>
                     </div>
-                    <p className="text-[9px] sm:text-[10px] text-amber-100 font-medium opacity-80">Snap a pic to auto-log</p>
+                    <p className="text-[9px] sm:text-[10px] text-amber-100 font-medium opacity-80">Snap a pic or pick from gallery to auto-log</p>
                   </div>
 
-                  <label className="mt-3 bg-white/20 hover:bg-white/30 text-white text-[9px] sm:text-[10px] font-black py-2 px-3 rounded-lg text-center cursor-pointer transition-colors flex items-center justify-center gap-2">
-                    {isScanning ? (
-                      <>
-                        <div className="w-3 h-3 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-                        <span>Analyzing...</span>
-                      </>
+                  {/* LOADING ANIMATION FOR FOOD ANALYSIS (shown after user selects a photo) */}
+                  {currentTier === SubscriptionTier.PREMIUM ? (
+                    isScanning ? (
+                      <div className="mt-6 flex flex-col items-center justify-center py-10 bg-white/10 rounded-2xl border border-white/20">
+                        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-5"></div>
+                        <p className="font-semibold text-white text-base">Analyzing your photo...</p>
+                        <p className="text-amber-100/80 text-sm mt-1 text-center max-w-[220px]">
+                          The System is identifying the food • Please wait a moment
+                        </p>
+                      </div>
+                    ) : isMobile ? (
+                      <div className="mt-4 grid grid-cols-2 gap-3">
+                        <label className="flex flex-col items-center justify-center bg-white/25 hover:bg-white/35 border border-white/40 hover:border-white/60 rounded-2xl py-5 cursor-pointer transition-all active:scale-[0.97] group">
+                          <Camera className="w-7 h-7 mb-2.5 text-white group-active:scale-110 transition-transform" />
+                          <span className="font-black text-sm">Take Photo</span>
+                          <span className="text-[10px] text-amber-100/70 mt-0.5">Camera</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            capture="environment" 
+                            className="hidden" 
+                            onChange={handlePhotoScan} 
+                          />
+                        </label>
+
+                        <label className="flex flex-col items-center justify-center bg-white/25 hover:bg-white/35 border border-white/40 hover:border-white/60 rounded-2xl py-5 cursor-pointer transition-all active:scale-[0.97] group">
+                          <Upload className="w-7 h-7 mb-2.5 text-white group-active:scale-110 transition-transform" />
+                          <span className="font-black text-sm">From Gallery</span>
+                          <span className="text-[10px] text-amber-100/70 mt-0.5">Photos</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={handlePhotoScan} 
+                          />
+                        </label>
+                      </div>
                     ) : (
-                      <span>Take Photo</span>
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handlePhotoScan} 
-                      disabled={isScanning} 
-                    />
-                  </label>
+                      <label className="mt-4 inline-flex items-center gap-2 bg-white text-amber-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-amber-50 transition-colors">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Upload Photo
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={handlePhotoScan} 
+                        />
+                      </label>
+                    )
+                  ) : (
+                    <div className="mt-3">
+                      <button
+                        onClick={() => navigate('/user/userPlan')}
+                        className="w-full bg-white/90 hover:bg-white text-amber-700 font-black py-2.5 px-4 rounded-lg text-sm transition-all flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        <Lock className="w-4 h-4" />
+                        UPGRADE TO PREMIUM
+                      </button>
+                      <p className="text-center text-[9px] text-amber-100/70 mt-2">Unlock instant food recognition</p>
+                    </div>
+                  )}
                 </div>
                 <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
               </div>
@@ -606,9 +660,9 @@ const DietLog = ({
               <div className="space-y-3 sm:space-y-4">
                 {currentTier === SubscriptionTier.FREE ? (
                   <div className="bg-white/70 backdrop-blur-xl p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl md:rounded-3xl border border-white/50 text-center">
-                    <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest mb-2">Upgrade for AI Analysis</p>
+                    <p className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest mb-2">Upgrade for Photo Analysis</p>
                     <button 
-                      onClick={() => onNavigate('settings')} 
+                      onClick={() => navigate('/user/userPlan')} 
                       className="text-amber-600 text-[9px] sm:text-[10px] md:text-xs font-black underline hover:text-amber-700 hover:scale-105 inline-block transition-all"
                     >
                       VIEW PRO FEATURES
@@ -630,7 +684,7 @@ const DietLog = ({
                         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        AI CLINICAL INSIGHTS
+                        CLINICAL INSIGHTS
                       </>
                     )}
                   </button>

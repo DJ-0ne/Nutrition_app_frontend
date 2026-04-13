@@ -1,8 +1,8 @@
-// App.jsx - ADDED CUSTOM INSTALL BUTTON FOR MANUAL PROMPT
-import { useEffect, useState } from 'react'; // Added useState
+// App.jsx - ADD ROUTES FOR TERMS & PRIVACY
+import { useEffect, useState } from 'react';
 import { AuthProvider } from "./components/Authentication/AuthContext";
 import ProtectedRoute from "./components/Authentication/Protected";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 import Login from "./components/Authentication/Login";
 import Landing from "./components/LandingPage/Landing";
@@ -15,6 +15,8 @@ import GoogleCallback from "./components/Authentication/GoogleCallback";
 import ForgotPassword from "./components/Authentication/ForgotPassword";
 import ResetPassword from "./components/Authentication/ResetPassword";
 import OTPVerification from './components/Authentication/OTPVerifiication';
+import Terms from './components/Legal/Terms';       
+import Privacy from './components/Legal/Privacy';   
 
 import { Toaster } from "sonner";
 
@@ -23,18 +25,13 @@ function App() {
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
-      // Removed e.preventDefault(); still allowing potential auto-prompt, but capturing for manual
       setDeferredPrompt(e);
       console.log('beforeinstallprompt event fired!');
     };
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Listen for install outcome (optional logging)
     window.addEventListener('appinstalled', () => {
       console.log('PWA installed successfully!');
     });
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', () => {});
@@ -54,40 +51,15 @@ function App() {
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route path="/otp" element={<OTPVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route
-            path="/reset-password/:uid/:token"
-            element={<ResetPassword />}
-          />
+          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+          
+          {/* NEW LEGAL ROUTES */}
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
 
-          {/* Specific route FIRST */}
-          <Route
-            path="/user/Recall"
-            element={
-              <ProtectedRoute allowedRoles={["user_client"]}>
-                <Recall />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Catch-all for all /user/* */}
-          <Route
-            path="/user/*"
-            element={
-              <ProtectedRoute allowedRoles={["user_client"]}>
-                <UserMain />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute allowedRoles={["system_admin"]}>
-                <AdminMain />
-              </ProtectedRoute>
-            }
-          />
-
+          <Route path="/user/Recall" element={<ProtectedRoute allowedRoles={["user_client"]}><Recall /></ProtectedRoute>} />
+          <Route path="/user/*" element={<ProtectedRoute allowedRoles={["user_client"]}><UserMain /></ProtectedRoute>} />
+          <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["system_admin"]}><AdminMain /></ProtectedRoute>} />
           <Route path="*" element={<Logout />} />
         </Routes>
       </AuthProvider>

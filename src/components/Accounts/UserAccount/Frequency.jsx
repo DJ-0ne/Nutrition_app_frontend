@@ -1,3 +1,6 @@
+// ====================== FULLY UPDATED FRONTEND (Frequency.jsx) ======================
+// All buttons now have cursor-pointer + Save Answers button has loading spinner & "Saving..." text
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../../auth/useAuth";
@@ -6,13 +9,12 @@ import { SubscriptionTier } from '../../../constants/subscriptionTier';
 
 const FREQUENCY_OPTIONS = [
   { value: "never", label: "Never" },
-  { value: "1-3_per_month", label: "1-3 per month" },
   { value: "1_per_week", label: "1 per week" },
   { value: "2-4_per_week", label: "2-4 per week" },
   { value: "5-6_per_week", label: "5-6 per week" },
-  { value: "1_per_day", label: "1 per day" },
-  { value: "2-3_per_day", label: "2-3 per day" },
-  { value: "4+_per_day", label: "4+ per day" },
+  { value: "7-8_per_week", label: "7-8 per week" },
+  { value: "9-10_per_week", label: "9-10 per week" },
+  { value: "10+_per_week", label: "10+ per week" },
 ];
 
 const Frequency = () => {
@@ -24,6 +26,7 @@ const Frequency = () => {
   const [showInsights, setShowInsights] = useState(false);
   const [loadingResponses, setLoadingResponses] = useState(true);
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [loadingSave, setLoadingSave] = useState(false);   // ← NEW: Save button loading state
 
   // Fetch real user tier from profile
   useEffect(() => {
@@ -89,6 +92,7 @@ const Frequency = () => {
     loadData();
   }, [apiBaseURL, token]);
 
+  // ====================== INSIGHTS GENERATION (with exact food names) ======================
   const generateAndSaveInsights = async () => {
     if (!token) {
       toast.error("Authentication required");
@@ -96,15 +100,39 @@ const Frequency = () => {
     }
 
     if (currentTier === SubscriptionTier.FREE) {
-      toast.error("Upgrade to Pro Lite or Premium to generate AI insights");
+      toast.error("Upgrade to Pro Lite or Premium to generate Advanced insights");
+      return;
+    }
+
+    if (Object.keys(responses).length === 0) {
+      toast.error("Please answer at least one question before generating insights.");
       return;
     }
 
     setLoadingInsights(true);
+
     try {
+      const allItems = ffqData.flatMap(section => section.items);
+      const summaryParts = [];
+
+      Object.entries(responses).forEach(([itemId, frequency]) => {
+        const item = allItems.find(i => i.id === itemId);
+        if (item) {
+          summaryParts.push(`${item.name}: ${frequency}`);
+        } else {
+          summaryParts.push(`${itemId}: ${frequency}`);
+        }
+      });
+
+      const ffq_summary = summaryParts.join(", ");
+
       const res = await fetch(`${apiBaseURL}/generate-ffq-insights/`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ffq_summary }),
       });
 
       if (!res.ok) {
@@ -115,7 +143,7 @@ const Frequency = () => {
       const data = await res.json();
       setCachedInsights(data.insights);
       setShowInsights(true);
-      toast.success("Fresh insights generated!");
+      toast.success("Fresh insights generated with exact food names!");
     } catch (err) {
       toast.error(err.message || "Failed to generate insights");
     } finally {
@@ -123,13 +151,7 @@ const Frequency = () => {
     }
   };
 
-  const handleOptionChange = (itemId, option) => {
-    setResponses((prev) => ({
-      ...prev,
-      [itemId]: option,
-    }));
-  };
-
+  // ====================== UPDATED SAVE HANDLER WITH LOADING ======================
   const handleSave = async () => {
     if (!token) {
       toast.error("Authentication required");
@@ -140,6 +162,8 @@ const Frequency = () => {
       toast.error("Please answer at least one question before saving.");
       return;
     }
+
+    setLoadingSave(true);   // ← Start loading
 
     try {
       const saveRes = await fetch(`${apiBaseURL}/save-ffq/`, {
@@ -160,7 +184,16 @@ const Frequency = () => {
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to save questionnaire");
+    } finally {
+      setLoadingSave(false);   // ← Always stop loading
     }
+  };
+
+  const handleOptionChange = (itemId, option) => {
+    setResponses((prev) => ({
+      ...prev,
+      [itemId]: option,
+    }));
   };
 
   // Calculate progress
@@ -228,7 +261,7 @@ const Frequency = () => {
                   </span>
                 </h1>
                 <p className="text-slate-600 text-base sm:text-lg max-w-3xl leading-relaxed">
-                  This questionnaire helps us understand your usual eating patterns over the past year. 
+                  This questionnaire helps us understand your usual eating patterns over the past Week. 
                   For each food item, select how often you typically consume the specified amount.
                 </p>
               </div>
@@ -269,7 +302,7 @@ const Frequency = () => {
                   </p>
                 </div>
 
-                {/* ====================== DESKTOP / TABLET TABLE ====================== */}
+                {/* DESKTOP / TABLET TABLE */}
                 <div className="hidden sm:block w-full overflow-x-auto">
                   <table className="w-full min-w-[1000px]">
                     <thead>
@@ -332,7 +365,7 @@ const Frequency = () => {
                   </table>
                 </div>
 
-                {/* ====================== MOBILE STACKED LAYOUT ====================== */}
+                {/* MOBILE STACKED LAYOUT */}
                 <div className="sm:hidden divide-y divide-slate-200 px-4">
                   {section.items.map((item, index) => (
                     <div key={item.id} className="py-6">
@@ -383,25 +416,34 @@ const Frequency = () => {
             ))}
           </div>
 
-          {/* Action Bar */}
+          {/* Action Bar - BOTH BUTTONS NOW HAVE cursor-pointer */}
           <div className="sticky bottom-4 z-40 bg-white shadow-2xl rounded-xl border-2 border-amber-200 p-4">
             <div className="flex flex-col sm:flex-row justify-end gap-3">
+              {/* ==================== SAVE ANSWERS BUTTON (with loading) ==================== */}
               <button
                 onClick={handleSave}
-                disabled={Object.keys(responses).length === 0}
-                className="px-6 py-3 rounded-lg font-bold text-base transition-all
+                disabled={Object.keys(responses).length === 0 || loadingSave}
+                className="px-6 py-3 rounded-lg font-bold text-base transition-all cursor-pointer
                   bg-white text-amber-600 border-2 border-amber-300
                   hover:bg-amber-50 hover:border-amber-400
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white
                   flex items-center justify-center gap-2"
               >
-                Save Answers
+                {loadingSave ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  "Save Answers"
+                )}
               </button>
 
+              {/* ==================== GENERATE INSIGHTS BUTTON (cursor-pointer added) ==================== */}
               <button
                 onClick={generateAndSaveInsights}
                 disabled={loadingInsights || currentTier === SubscriptionTier.FREE}
-                className={`px-6 py-3 rounded-lg font-bold text-base transition-all flex items-center justify-center gap-2 min-w-[200px]
+                className={`px-6 py-3 rounded-lg font-bold text-base transition-all cursor-pointer flex items-center justify-center gap-2 min-w-[200px]
                   ${currentTier === SubscriptionTier.FREE 
                     ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
                     : 'bg-amber-500 text-white border-2 border-amber-600 hover:bg-amber-600 hover:border-amber-700'
@@ -423,7 +465,7 @@ const Frequency = () => {
             </div>
           </div>
 
-          {/* Insights Panel */}
+          {/* Insights Panel - Close button now has cursor-pointer */}
           {showInsights && cachedInsights && (
             <div className="w-full bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200 p-6 shadow-xl">
               <div className="flex justify-between items-center mb-4 border-b border-amber-200 pb-3">
@@ -432,7 +474,7 @@ const Frequency = () => {
                 </h3>
                 <button
                   onClick={() => setShowInsights(false)}
-                  className="w-8 h-8 rounded-full bg-white border border-amber-200 text-amber-600 font-bold hover:bg-amber-50 transition-colors flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-white border border-amber-200 text-amber-600 font-bold hover:bg-amber-50 transition-colors flex items-center justify-center cursor-pointer"
                 >
                   ✕
                 </button>
@@ -454,7 +496,7 @@ const Frequency = () => {
 
           {currentTier === SubscriptionTier.FREE && (
             <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 text-center">
-              <p className="text-amber-800 text-lg font-bold mb-2">Upgrade to unlock AI Insights</p>
+              <p className="text-amber-800 text-lg font-bold mb-2">Upgrade to unlock Advanced Insights</p>
               <p className="text-amber-600 mb-4">Pro Lite and Premium users get personalized dietary analysis.</p>
             </div>
           )}

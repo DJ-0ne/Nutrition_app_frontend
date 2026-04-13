@@ -1,7 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import { MEAL_TYPES } from "../../../constants/mealTypes";
-import { Plus, ArrowLeft } from "lucide-react";
+import { Plus, ArrowLeft, Lock, Camera, Upload } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../../../auth/useAuth";
 import { toast } from "sonner";
@@ -75,7 +74,7 @@ const Recall = ({ userTier: propUserTier }) => {
   const [currentTier, setCurrentTier] = useState(
     propUserTier || SubscriptionTier.PREMIUM,
   );
-  const [userName, setUserName] = useState(""); // 👈 ADD THIS STATE
+  const [userName, setUserName] = useState("");
 
   const [recallData, setRecallData] = useState({});
   const [currentInput, setCurrentInput] = useState({});
@@ -89,11 +88,18 @@ const Recall = ({ userTier: propUserTier }) => {
   const [aiSuggestions, setAiSuggestions] = useState(null);
   const [selectedMealForAI, setSelectedMealForAI] = useState("lunch");
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   useEffect(() => {
     if (propUserTier) setCurrentTier(propUserTier);
   }, [propUserTier]);
 
-  // 👇 NEW EFFECT: fetch profile to get tier AND user name
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!authToken) return;
@@ -106,7 +112,6 @@ const Recall = ({ userTier: propUserTier }) => {
           data.tier || data.subscription_tier || data.subscriptionTier;
         if (tier) setCurrentTier(tier);
 
-        // Set user name – adjust according to your API response structure
         const name =
           data.name ||
           (data.first_name && data.last_name
@@ -192,7 +197,7 @@ const Recall = ({ userTier: propUserTier }) => {
     const isDuplicate = currentMealItems.some(
       (item) => item.food.toLowerCase() === foodToAdd.toLowerCase(),
     );
-
+    toast.success("food added successfully");
     if (isDuplicate) {
       toast.error("Meal already logged", {
         description: "This food is already added to this meal today.",
@@ -242,9 +247,11 @@ const Recall = ({ userTier: propUserTier }) => {
   };
 
   const handlePhotoScan = async (e) => {
-    if (!authToken) {
-      toast.error("Please log in first");
-      navigate("/login");
+    if (currentTier !== SubscriptionTier.PREMIUM) {
+      toast.error("AI Food Analysis is a Premium feature", {
+        description: "Upgrade to Premium for instant photo logging.",
+        action: { label: "Upgrade", onClick: () => navigate('/plan') }
+      });
       return;
     }
 
@@ -262,29 +269,22 @@ const Recall = ({ userTier: propUserTier }) => {
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Analysis failed");
-      }
+      if (!res.ok) throw new Error('Analysis failed');
 
       const data = await res.json();
       const detected = data.detected_food?.trim();
 
       if (
         detected &&
-        detected !== "No food detected" &&
-        detected.toLowerCase() !== "none"
+        detected !== "No food detected"
       ) {
         setAiSuggestions([detected]);
-        toast.success(`Food detected: ${detected}`);
+        toast.success(`Detected: ${detected}`);
       } else {
-        toast.error("No food detected in the image");
-        setAiSuggestions(null);
+        toast.error('No food detected in the image');
       }
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Failed to analyze photo");
-      setAiSuggestions(null);
+      toast.error(err.message || 'Failed to analyze photo');
     } finally {
       setIsScanning(false);
       e.target.value = "";
@@ -351,7 +351,6 @@ const Recall = ({ userTier: propUserTier }) => {
     }
   };
 
-  // 👇 UPDATED PDF handler (passes userName and meals)
   const handleDownloadPDF = () => {
     if (currentTier === SubscriptionTier.FREE) {
       toast.error("Please upgrade to Pro Lite or Premium to download reports.");
@@ -362,7 +361,7 @@ const Recall = ({ userTier: propUserTier }) => {
       iddsScores[selectedDate] || {},
       IDDS_GROUPS,
       userName,
-      recallData[selectedDate] || {}, // meals for the selected date
+      recallData[selectedDate] || {},
     );
     toast.info("Generating your PDF report...");
   };
@@ -420,58 +419,82 @@ const Recall = ({ userTier: propUserTier }) => {
             </div>
           </header>
 
-          <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-6 text-white shadow-xl shadow-amber-200 relative overflow-hidden">
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
-                <h3 className="text-xl font-black tracking-tight mb-1">
-                  AI Food Analysis
-                </h3>
-                <p className="text-amber-100 text-sm font-medium">
-                  Upload a photo of your meal for instant logging.
-                </p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="food-photo-upload"
-                  onChange={handlePhotoScan}
-                />
-                <label
-                  htmlFor="food-photo-upload"
-                  className="mt-4 inline-flex items-center gap-2 bg-white text-amber-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-amber-50 transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  {isScanning ? "Analyzing..." : "Upload Photo"}
-                </label>
-              </div>
-              {isScanning && (
-                <div className="animate-pulse flex gap-1">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                  <div className="w-2 h-2 bg-white rounded-full animation-delay-200"></div>
-                  <div className="w-2 h-2 bg-white rounded-full animation-delay-400"></div>
+          {currentTier === SubscriptionTier.PREMIUM ? (
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-6 text-white shadow-xl shadow-amber-200 relative overflow-hidden">
+              <div className="relative z-10 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-black tracking-tight mb-1">
+                    AI Food Analysis
+                  </h3>
+                  <p className="text-amber-100 text-sm font-medium">
+                    Snap a pic or pick from gallery for instant logging.
+                  </p>
                 </div>
-              )}
+
+                {/* LOADING ANIMATION FOR FOOD ANALYSIS (shown after user selects a photo) */}
+                {isScanning ? (
+                  <div className="mt-6 flex flex-col items-center justify-center py-10 bg-white/10 rounded-2xl border border-white/20">
+                    <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mb-5"></div>
+                    <p className="font-semibold text-white text-base">Analyzing your photo...</p>
+                    <p className="text-amber-100/80 text-sm mt-1 text-center max-w-[220px]">
+                      AI is identifying the food • Please wait a moment
+                    </p>
+                  </div>
+                ) : isMobile ? (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <label className="flex flex-col items-center justify-center bg-white/25 hover:bg-white/35 border border-white/40 hover:border-white/60 rounded-2xl py-5 cursor-pointer transition-all active:scale-[0.97] group">
+                      <Camera className="w-7 h-7 mb-2.5 text-white group-active:scale-110 transition-transform" />
+                      <span className="font-black text-sm">Take Photo</span>
+                      <span className="text-[10px] text-amber-100/70 mt-0.5">Camera</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        capture="environment" 
+                        className="hidden" 
+                        onChange={handlePhotoScan} 
+                      />
+                    </label>
+
+                    <label className="flex flex-col items-center justify-center bg-white/25 hover:bg-white/35 border border-white/40 hover:border-white/60 rounded-2xl py-5 cursor-pointer transition-all active:scale-[0.97] group">
+                      <Upload className="w-7 h-7 mb-2.5 text-white group-active:scale-110 transition-transform" />
+                      <span className="font-black text-sm">From Gallery</span>
+                      <span className="text-[10px] text-amber-100/70 mt-0.5">Photos</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handlePhotoScan} 
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="mt-4 inline-flex items-center gap-2 bg-white text-amber-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-amber-50 transition-colors">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Upload Photo
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handlePhotoScan} 
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-          </div>
+          ) : (
+            <div className="bg-white/70 backdrop-blur-xl border border-amber-200 rounded-3xl p-8 text-center">
+              <Lock className="w-10 h-10 text-amber-500 mx-auto mb-4" />
+              <h3 className="font-black text-xl text-slate-800 mb-2">AI Food Analysis</h3>
+              <p className="text-slate-500 mb-6">Upload a photo and let AI instantly add your meal</p>
+              <button onClick={() => navigate('/settings')} className="bg-amber-600 text-white font-black px-8 py-3 rounded-2xl hover:bg-amber-700">
+                Upgrade to Premium
+              </button>
+            </div>
+          )}
 
           {aiSuggestions && aiSuggestions.length > 0 && (
             <div className="bg-white border-2 border-amber-100 rounded-2xl p-6 shadow-lg animate-in fade-in zoom-in-95 duration-300">

@@ -158,9 +158,9 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
                   : 'bg-amber-50 text-amber-700 border-amber-300'
               }`}>
                 {currentTier === SubscriptionTier.FREE ? (
-                  <span>Free Tier • Upgrade for AI Plans</span>
+                  <span>Free Tier • Upgrade for Advanced Plans</span>
                 ) : (
-                  <span>Premium Active • AI-Powered Plans</span>
+                  <span>Premium Active • Advanced Plans</span>
                 )}
               </div>
             </div>
@@ -276,7 +276,7 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
                   </>
                 ) : (
                   <>
-                    <span>Generate New AI Plan</span>
+                    <span>Generate New Plan</span>
                   </>
                 )}
               </button>
@@ -286,7 +286,7 @@ const MealPlan = ({ userTier: propUserTier = SubscriptionTier.PREMIUM }) => {
           {currentTier === SubscriptionTier.FREE && (
             <div className="w-full bg-amber-50 border-2 border-amber-200 rounded-xl p-6 text-center">
               <p className="text-amber-800 text-lg font-bold mb-2">Upgrade to Generate Personalized Meal Plans</p>
-              <p className="text-amber-600 mb-4">Get AI-powered meal plans tailored to your dietary needs and goals.</p>
+              <p className="text-amber-600 mb-4">Get Advanced meal plans tailored to your dietary needs and goals.</p>
               <button className="bg-amber-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-amber-600 transition-colors">
                 View Premium Features
               </button>

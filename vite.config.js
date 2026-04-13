@@ -13,41 +13,41 @@ export default defineConfig({
       registerType: 'autoUpdate',
       manifestFilename: 'manifest.json',
 
-      includeAssets: ['favicon.ico', 'abcdelogo-144.png', 'abcdelogo-192.png', 'client-512.png', 'client-maskable-512.png', 'screenshot-desktop.png', 'screenshot-mobile.png', 'apple-touch-icon.png'], // Added apple-touch-icon if using
+      includeAssets: ['favicon.ico','logo.png', 'abcdelogo-144.png', 'abcdelogo-192.png', 'client-512.png', 'client-maskable-512.png', 'screenshot-desktop.png', 'screenshot-mobile.png', 'apple-touch-icon.png'],
 
       manifest: {
-        name: 'ABCDE Nutrition',
-        short_name: 'ABCDE Nutrition',
+        name: 'ABCDE SMART DIET APP',
+        short_name: 'ABCDE SMART DIET',
         description: 'Track your nutrition and meals',
         theme_color: '#ffffff',
         text_color: '#000000',
         display: 'standalone',
-        orientation: 'any', // Changed to 'any' for mobile flexibility
+        orientation: 'portrait', 
         scope: '/',
         start_url: '/',
         id: '/?homescreen=1',
         categories: ['health', 'fitness', 'food'],
         icons: [
           {
+            src: 'logo.png',
+            sizes: '500x500',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'logo.png',
+            sizes: '500x500',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'logo.png',
+            sizes: '500x500',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
             src: 'abcdelogo-144.png',
-            sizes: '144x144',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'abcdelogo-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'client-512.png', // Added
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: 'client-maskable-512.png', // Added
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
@@ -74,16 +74,9 @@ export default defineConfig({
             name: 'Log Meal',
             short_name: 'Log',
             description: 'Quickly log a meal',
-            url: '/log-meal',
-            icons: [{ src: 'abcdelogo-192.png', sizes: '192x192', type: 'image/png' }]
+            url: '/user/log-meal',
+            icons: [{ src: 'logo.png', sizes: '192x192', type: 'image/png' }]
           },
-          {
-            name: 'View Progress',
-            short_name: 'Progress',
-            description: 'Check your nutrition progress',
-            url: '/progress',
-            icons: [{ src: 'abcdelogo-192.png', sizes: '192x192', type: 'image/png' }]
-          }
         ]
       },
 
@@ -118,6 +111,15 @@ export default defineConfig({
       }
     })
   ],
+
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL?.replace('/api', '') || 'https://a.nutristrategist.africa',
+        changeOrigin: true,
+      }
+    }
+  },
 
   resolve: {
     alias: {
