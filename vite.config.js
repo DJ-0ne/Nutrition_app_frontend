@@ -115,7 +115,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000',
+        target: process.env.VITE_API_URL?.replace('/api', '') || 'https://a.nutristrategist.africa',
         changeOrigin: true,
       }
     }
@@ -129,7 +129,7 @@ export default defineConfig({
 
   define: {
     'process.env.VITE_API_URL': JSON.stringify(
-      process.env.VITE_API_URL || 'http://localhost:8000/api'
+      process.env.VITE_API_URL || 'https://a.nutristrategist.africa/api'
     )
   }
 })
