@@ -149,10 +149,10 @@ function UserSidebar() {
               <div className="relative group">
                 <div className="bg-amber-400 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <img 
-                  src="/abcdelogo.jpg" 
+                  src="/logo.png" 
                   alt="Logo" 
                   className={`
-                    relative rounded-xl object-cover border-2 border-white/40 shadow-2xl
+                    relative rounded-xl object-cover border-2 border-white/10 shadow-2xl
                     ${isCollapsed ? 'w-12 h-12' : 'w-14 h-14'}
                   `}
                 />

@@ -1,4 +1,4 @@
-// components/Authentication/GoogleCallback.jsx - UPDATED FOR OTP HANDLING
+// components/Authentication/GoogleCallback.jsx
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthContext } from './AuthContext';
@@ -19,6 +19,7 @@ const GoogleCallback = () => {
 
     if (googleError) {
       let errorMessage = 'Google sign-in failed';
+
       if (googleError === 'account_not_registered') {
         errorMessage = 'This account is not registered. Please sign up or use a different account.';
       } else if (googleError === 'account_already_exists') {
@@ -29,7 +30,11 @@ const GoogleCallback = () => {
         errorMessage = 'No ID token received from Google.';
       } else if (googleError === 'no_code') {
         errorMessage = 'No authorization code received.';
-      } // Add more specific messages as needed
+      } else if (googleError === 'already_logged_in_elsewhere') {
+        // ← THIS IS THE NEW CASE (exactly what you asked for)
+        errorMessage = 'You are already logged in on another device or browser.\n\n' +
+                      'Please log out from the other session first before signing in here.';
+      }
 
       toast.error(errorMessage);
       window.location.href = `${window.location.origin}/#/login`;
@@ -44,6 +49,7 @@ const GoogleCallback = () => {
       return;
     }
 
+    // Normal successful Google login
     try {
       const access = params.get('access');
       const refresh = params.get('refresh');
